@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CE2 ลงเวลา">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>CE2 ลงเวลาเข้า-ออกงาน</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--ink:#141414;--muted:#6d6a64;--line:#e4e1da;--bg:#f5f3ef;--card:#fff;
+--green:#12804a;--green2:#e6f4ec;--red:#c4302a;--red2:#fcebea;--amber:#a86a12;--amber2:#fcf3e2;--blue:#1d5bb8;--blue2:#e8f0fb}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#e7e4de;font-family:'Sarabun','Noto Sans Myanmar',system-ui,sans-serif;color:var(--ink);font-size:18px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body.my{font-family:'Noto Sans Myanmar','Sarabun',system-ui,sans-serif;line-height:1.75;font-size:17px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+.phone{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:110px;box-shadow:0 0 40px rgba(0,0,0,.08)}
+/* demo bar */
+#demo{max-width:460px;margin:0 auto;background:#222;color:#eee;font-size:13px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+#demo b{color:#ffd56b}
+#demo button{background:#444;color:#fff;border:0;border-radius:8px;padding:4px 10px;font-size:13px}
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top img{height:30px}
+.langs{display:flex;gap:4px;background:var(--bg);border-radius:999px;padding:3px}
+.langs button{border:0;background:transparent;border-radius:999px;padding:6px 11px;font-size:15px;font-weight:700;color:var(--muted)}
+.langs button.on{background:var(--ink);color:#fff}
+/* generic */
+.pad{padding:0 16px}
+.card{background:var(--card);border-radius:18px;padding:18px;margin:14px 16px;border:1px solid var(--line)}
+h1{font-size:26px;margin:0 0 4px;font-weight:800}
+h2{font-size:21px;margin:0 0 10px;font-weight:800}
+h3{font-size:18px;margin:0 0 8px;font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:15px}
+.center{text-align:center}
+label.f{display:block;font-weight:700;margin:14px 0 6px;font-size:17px}
+input.in,select.in,textarea.in{font-size:21px;padding:14px 16px;border:2px solid var(--line);border-radius:14px;width:100%;background:#fff;color:var(--ink)}
+input.in:focus,select.in:focus,textarea.in:focus{outline:none;border-color:var(--ink)}
+textarea.in{font-size:18px;min-height:80px}
+.otp{letter-spacing:12px;text-align:center;font-size:32px!important;font-weight:800}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:16px;font-size:21px;font-weight:800;background:var(--ink);color:#fff;margin-top:16px}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line)}
+.btn.g{background:var(--green)}.btn.r{background:var(--red)}.btn.b{background:var(--blue)}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.sbtn{border:0;border-radius:12px;padding:10px 14px;font-size:16px;font-weight:700;background:var(--bg);color:var(--ink)}
+.sbtn.g{background:var(--green);color:#fff}.sbtn.r{background:var(--red);color:#fff}.sbtn.b{background:var(--blue);color:#fff}.sbtn.o{background:#fff;border:2px solid var(--line)}
+/* big clock button */
+.hello{padding:18px 16px 4px}
+.clock{font-size:54px;font-weight:800;text-align:center;letter-spacing:1px;font-variant-numeric:tabular-nums;margin-top:6px}
+.date{text-align:center;color:var(--muted);font-size:18px}
+.bigbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;width:230px;height:230px;margin:22px auto 8px;border-radius:50%;border:0;color:#fff;font-size:36px;font-weight:800;box-shadow:0 10px 0 rgba(0,0,0,.18),0 18px 30px rgba(0,0,0,.12);transition:transform .08s}
+.bigbtn:active{transform:translateY(6px);box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.bigbtn .ic{font-size:58px;line-height:1;margin-bottom:6px}
+.bigbtn.in{background:var(--green)}.bigbtn.out{background:var(--red)}
+.hint{text-align:center;color:var(--muted);font-size:16px;padding:0 24px}
+.status2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.st{border-radius:14px;padding:12px;background:var(--bg)}
+.st .k{font-size:15px;color:var(--muted)}
+.st .v{font-size:26px;font-weight:800}
+.pill{display:inline-block;border-radius:999px;padding:3px 11px;font-size:14px;font-weight:700;white-space:nowrap}
+.p-g{background:var(--green2);color:var(--green)}.p-r{background:var(--red2);color:var(--red)}.p-a{background:var(--amber2);color:var(--amber)}.p-b{background:var(--blue2);color:var(--blue)}.p-n{background:#eee;color:#555}
+.list>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.list>div:first-child{border-top:0}
+a.map{color:var(--blue);font-weight:700;text-decoration:none;font-size:15px}
+/* leave types */
+.types{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.types button{border:2px solid var(--line);background:#fff;border-radius:16px;padding:14px 8px;font-size:18px;font-weight:700}
+.types button .e{display:block;font-size:34px}
+.types button.on{border-color:var(--ink);background:var(--ink);color:#fff}
+/* stats */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+.tile .k{font-size:15px;color:var(--muted)}
+.tile .v{font-size:32px;font-weight:800;line-height:1.1}
+.tile .u{font-size:15px;color:var(--muted);font-weight:600}
+.monthnav{display:flex;align-items:center;justify-content:space-between;margin:14px 16px 0}
+.monthnav button{border:0;background:#fff;border:1px solid var(--line);border-radius:12px;width:48px;height:44px;font-size:22px}
+.monthnav .m{font-size:21px;font-weight:800}
+/* bottom nav */
+nav.bn{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:10}
+nav.bn button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 2px;border-radius:12px;color:var(--muted);font-size:14px;font-weight:700;position:relative}
+nav.bn button .e{font-size:26px;line-height:1.2}
+nav.bn button.on{color:var(--ink);background:var(--bg)}
+.badge{position:absolute;top:2px;right:calc(50% - 26px);background:var(--red);color:#fff;border-radius:999px;font-size:12px;min-width:20px;height:20px;line-height:20px;padding:0 5px}
+/* admin */
+.seg{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 2px;scrollbar-width:none}
+.seg button{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:16px;font-weight:700;position:relative}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.seg .badge{position:static;display:inline-block;margin-left:4px}
+.emp{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.emp:first-child{border-top:0}
+.av{flex:0 0 42px;height:42px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.emp .nm{font-weight:700}
+.emp .meta{font-size:15px;color:var(--muted)}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.acts .sbtn{padding:7px 11px;font-size:14px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left;white-space:normal}
+.tbl th{font-size:13px;color:var(--muted);font-weight:700}
+.scroll{overflow-x:auto}
+.ts{font-size:13px;color:var(--muted);text-align:right;margin:8px 16px 0}
+/* modal & toast */
+#modal .bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+#modal .box{background:#fff;border-radius:22px;padding:24px 20px 18px;max-width:400px;width:100%;text-align:center;max-height:90vh;overflow:auto}
+#modal .box.form{text-align:left}
+#modal .ico{font-size:60px;line-height:1}
+#modal .box.err{border-top:8px solid var(--red)}
+#modal .box.ok{border-top:8px solid var(--green)}
+#modal h2{margin-top:8px}
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:60}
+#toast div{background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.splash{padding:40px 22px 10px;text-align:center}
+.splash img{width:230px;max-width:70%;margin:10px auto 18px;display:block}
+.chip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px 9px;margin:3px;font-size:14px;cursor:pointer}
+
+.phone{padding-top:env(safe-area-inset-top)}
+.spin{width:44px;height:44px;border:5px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp 1s linear infinite;margin:20px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loadbox{padding:30px;text-align:center;color:var(--muted)}
+.code{font-size:56px;font-weight:800;letter-spacing:8px;font-variant-numeric:tabular-nums}
+.stack .btn{margin-top:10px}
+.install{background:#fff8e6;border:1px solid #f1d58a}
+.refresh{border:0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:14px;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<div id="modal"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+/* ===================== CONFIG ===================== */
+const CFG=window.CE2_CONFIG||{};
+const API_URL=String(CFG.API_URL||'').trim();
+const KD='ce2_device_id',KL='ce2_lang';
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function genId(){
+  try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID()}catch(e){}
+  const a=new Uint8Array(16);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<16;i++)a[i]=Math.floor(Math.random()*256)}
+  let s='';a.forEach(b=>s+=('0'+b.toString(16)).slice(-2));
+  return s.slice(0,8)+'-'+s.slice(8,12)+'-'+s.slice(12,16)+'-'+s.slice(16,20)+'-'+s.slice(20);
+}
+let DEVICE=lsGet(KD);if(!DEVICE||DEVICE.length<16){DEVICE=genId();lsSet(KD,DEVICE)}
+const devCode=()=>DEVICE.replace(/-/g,'').slice(-4).toUpperCase();
+
+/* ===================== I18N ===================== */
+const T={
+th:{app:'ลงเวลาเข้า-ออกงาน',company:'บจก. ซีอีทู',welcome:'ยินดีต้อนรับ',loginHint:'ลงทะเบียน / เข้าใช้งาน ด้วยเบอร์มือถือของคุณ',phone:'เบอร์มือถือ',next:'ถัดไป',otpSent:'ส่งรหัส OTP ทาง SMS ไปที่',enterOtp:'กรอกรหัส 6 หลักจาก SMS',confirm:'ยืนยัน',back:'ย้อนกลับ',ok:'ตกลง',cancel:'ยกเลิก',save:'บันทึก',
+errPhone:'กรุณากรอกเบอร์มือถือ 10 หลัก',errNotFound:'ไม่พบเบอร์นี้ในฐานข้อมูลพนักงาน กรุณาติดต่อ HR',errResigned:'บัญชีนี้ถูกปิดแล้ว (แจ้งลาออก) กรุณาติดต่อ HR',errOtp:'รหัส OTP ไม่ถูกต้อง ลองใหม่อีกครั้ง',
+errBuddyT:'ห้ามลงเวลาแทนกัน',errBuddy:'มือถือเครื่องนี้ลงทะเบียนไว้กับ<br><b>{name}</b><br>แล้ว 1 เครื่องใช้ได้ 1 คนเท่านั้น',errOtherT:'เบอร์นี้ผูกกับมือถือเครื่องอื่นแล้ว',errOther:'ถ้าเปลี่ยนมือถือใหม่ กรุณาแจ้งผู้ดูแลระบบให้รีเซ็ตเครื่องก่อน',errKicked:'บัญชีของคุณถูกรีเซ็ตหรือปิดโดยผู้ดูแลระบบ กรุณาลงทะเบียนใหม่',
+hello:'สวัสดี',clockIn:'เข้างาน',clockOut:'ออกงาน',tapHint:'กดปุ่มเดียว ระบบบันทึกเวลาและตำแหน่งให้อัตโนมัติ',inAt:'เวลาเข้างาน',outAt:'เวลาออกงาน',notYet:'ยังไม่ลง',doneToday:'วันนี้ลงเวลาครบแล้ว ขอบคุณครับ/ค่ะ',late:'สาย',onTime:'ตรงเวลา',locating:'กำลังบันทึกเวลาและตำแหน่ง...',savedIn:'บันทึกเข้างานแล้ว',savedOut:'บันทึกออกงานแล้ว',location:'ตำแหน่ง',map:'ดูแผนที่ ›',simLoc:'(ตำแหน่งจำลอง)',recent:'ประวัติล่าสุด',onLeaveToday:'วันนี้คุณมีวันลาที่อนุมัติแล้ว',confirmOut:'ยืนยันออกงานตอนนี้?',
+nTime:'ลงเวลา',nLeave:'ขอลา',nAdv:'เบิกเงิน',nSum:'สรุป',nAdmin:'ผู้ดูแล',
+leaveTitle:'ขอลา',chooseType:'1. เลือกประเภทการลา',sick:'ลาป่วย',personal:'ลากิจ',vacation:'ลาพักร้อน',other:'ลาอื่นๆ',dates:'2. เลือกวันที่',from:'ตั้งแต่',to:'ถึง',reason:'3. เหตุผล (ไม่ต้องกรอกก็ได้)',submit:'ส่งคำขอ',sent:'ส่งคำขอแล้ว รอผู้ดูแลอนุมัติ',myReq:'คำขอของฉัน',none:'ยังไม่มีรายการ',days:'วัน',pending:'รออนุมัติ',approved:'อนุญาต',rejected:'ไม่อนุญาต',cancelReq:'ยกเลิกคำขอ',errType:'กรุณาเลือกประเภทการลา',errDate:'วันที่ไม่ถูกต้อง',
+advTitle:'เบิกเงินล่วงหน้า',nick:'ช่องที่ 1 · ชื่อเล่น',amount:'ช่องที่ 2 · จำนวนเงิน (บาท)',advSent:'ส่งคำขอเบิกเงินแล้ว',errAdv:'กรุณากรอกชื่อเล่นและจำนวนเงิน',aRequested:'รอโอนเงิน',aTransferred:'โอนแล้ว · กรุณายืนยัน',aReceived:'ได้รับเงินแล้ว',aNotReceived:'แจ้งว่ายังไม่ได้รับ',gotIt:'✓ ได้รับเงินแล้ว',notGot:'✗ ยังไม่ได้รับ',advMonth:'ยอดเบิกเดือนนี้',baht:'บาท',confirmMoney:'เงินเข้าบัญชีแล้วหรือยัง?',
+sumTitle:'สรุปประจำเดือน',work:'วันทำงาน',lateDays:'วันมาสาย',leaveDays:'วันลา',hours:'ชั่วโมงรวม',hr:'ชม.',advTotal:'ยอดเบิกเงิน',export:'⬇ ดาวน์โหลด Excel',daily:'รายวัน',dl:'กำลังเตรียมไฟล์ Excel...',dlOk:'ดาวน์โหลดแล้ว',dlNo:'ดาวน์โหลดไม่ได้ในหน้านี้',
+admin:'ผู้ดูแลระบบ',live:'เรียลไทม์',approvals:'อนุมัติ',staff:'พนักงาน',reports:'รายงาน',settings:'ตั้งค่า',updated:'อัปเดตล่าสุด',all:'ทั้งหมด',working:'กำลังทำงาน',left:'ออกงานแล้ว',absent:'ยังไม่เข้างาน',onLeave:'ลา',leaveReq:'คำขอลา',advReq:'คำขอเบิกเงิน',approve:'อนุญาต',reject:'ไม่อนุญาต',markPaid:'โอนเงินแล้ว',history:'ที่ดำเนินการแล้ว',empNotGot:'พนักงานแจ้งว่ายังไม่ได้รับเงิน',
+addEmp:'+ เพิ่มพนักงานใหม่',edit:'แก้ไข',resign:'แจ้งลาออก',rehire:'กลับเข้าทำงาน',resetDev:'รีเซ็ตเครื่อง',empId:'รหัสพนักงาน',empName:'ชื่อ-นามสกุล',position:'ตำแหน่ง',isAdmin:'เป็นผู้ดูแลระบบ',active:'ทำงานอยู่',resigned:'ลาออกแล้ว',bound:'ผูกเครื่องแล้ว',unbound:'ยังไม่ลงทะเบียน',noPhone:'ยังไม่มีเบอร์',search:'ค้นหาชื่อ / รหัส / เบอร์',errDup:'รหัสหรือเบอร์นี้มีอยู่แล้ว',errReq:'กรุณากรอกรหัส ชื่อ และเบอร์',confirmResign:'ยืนยันแจ้งลาออก?',confirmReset:'รีเซ็ตเครื่อง? พนักงานจะต้องลงทะเบียนใหม่บนมือถือเครื่องใหม่',
+workStart:'เวลาเข้างาน',workEnd:'เวลาเลิกงาน',grace:'ผ่อนผันมาสาย (นาที)',saved:'บันทึกแล้ว',exportAll:'⬇ Export Excel ทั้งเดือน',newLeaveNoti:'มีคำขอใหม่รออนุมัติ {n} รายการ',logout:'ออกจากระบบ',
+},
+en:{app:'Time Clock',company:'CE2 Co., Ltd.',welcome:'Welcome',loginHint:'Register / sign in with your mobile number',phone:'Mobile number',next:'Next',otpSent:'We sent an SMS code to',enterOtp:'Enter the 6-digit code from SMS',confirm:'Confirm',back:'Back',ok:'OK',cancel:'Cancel',save:'Save',
+errPhone:'Please enter a 10-digit mobile number',errNotFound:'This number is not in the employee list. Please contact HR.',errResigned:'This account is closed (resigned). Please contact HR.',errOtp:'Wrong code. Please try again.',
+errBuddyT:'No clocking for others',errBuddy:'This phone is already registered to<br><b>{name}</b>.<br>One phone = one person only.',errOtherT:'Number linked to another phone',errOther:'If you changed phones, ask the admin to reset your device first.',errKicked:'Your account was reset or closed by the admin. Please register again.',
+hello:'Hello',clockIn:'Clock In',clockOut:'Clock Out',tapHint:'One tap — time and location are saved automatically',inAt:'Clocked in',outAt:'Clocked out',notYet:'Not yet',doneToday:'All done for today. Thank you!',late:'Late',onTime:'On time',locating:'Saving time and location...',savedIn:'Clock-in saved',savedOut:'Clock-out saved',location:'Location',map:'Open map ›',simLoc:'(simulated)',recent:'Recent days',onLeaveToday:'You have approved leave today',confirmOut:'Clock out now?',
+nTime:'Clock',nLeave:'Leave',nAdv:'Advance',nSum:'Summary',nAdmin:'Admin',
+leaveTitle:'Request leave',chooseType:'1. Choose leave type',sick:'Sick',personal:'Personal',vacation:'Vacation',other:'Other',dates:'2. Choose dates',from:'From',to:'To',reason:'3. Reason (optional)',submit:'Send request',sent:'Request sent. Waiting for approval.',myReq:'My requests',none:'Nothing yet',days:'days',pending:'Pending',approved:'Approved',rejected:'Not approved',cancelReq:'Cancel request',errType:'Please choose a leave type',errDate:'Invalid dates',
+advTitle:'Salary advance',nick:'Box 1 · Nickname',amount:'Box 2 · Amount (THB)',advSent:'Advance request sent',errAdv:'Please fill in nickname and amount',aRequested:'Waiting for transfer',aTransferred:'Transferred · please confirm',aReceived:'Received',aNotReceived:'Reported not received',gotIt:'✓ I received it',notGot:'✗ Not received yet',advMonth:'Advances this month',baht:'THB',confirmMoney:'Has the money arrived?',
+sumTitle:'Monthly summary',work:'Work days',lateDays:'Late days',leaveDays:'Leave days',hours:'Total hours',hr:'h',advTotal:'Advances',export:'⬇ Download Excel',daily:'Daily',dl:'Preparing Excel file...',dlOk:'Downloaded',dlNo:'Download not available here',
+admin:'Admin',live:'Live',approvals:'Approvals',staff:'Staff',reports:'Reports',settings:'Settings',updated:'Last update',all:'All',working:'Working',left:'Clocked out',absent:'Not in yet',onLeave:'On leave',leaveReq:'Leave requests',advReq:'Advance requests',approve:'Approve',reject:'Reject',markPaid:'Mark transferred',history:'Done',empNotGot:'Employee says money not received',
+addEmp:'+ Add new employee',edit:'Edit',resign:'Mark resigned',rehire:'Re-activate',resetDev:'Reset device',empId:'Employee ID',empName:'Full name',position:'Position',isAdmin:'Is admin',active:'Active',resigned:'Resigned',bound:'Device linked',unbound:'Not registered',noPhone:'No phone yet',search:'Search name / ID / phone',errDup:'ID or phone already exists',errReq:'ID, name and phone are required',confirmResign:'Mark as resigned?',confirmReset:'Reset device? The employee must register again on the new phone.',
+workStart:'Start time',workEnd:'End time',grace:'Late grace (minutes)',saved:'Saved',exportAll:'⬇ Export month to Excel',newLeaveNoti:'{n} new request(s) waiting',logout:'Sign out',
+},
+my:{app:'အလုပ်ချိန် မှတ်တမ်း',company:'CE2 ကုမ္ပဏီ',welcome:'ကြိုဆိုပါသည်',loginHint:'သင့်ဖုန်းနံပါတ်ဖြင့် စာရင်းသွင်း / ဝင်ရောက်ပါ',phone:'ဖုန်းနံပါတ်',next:'ရှေ့ဆက်ရန်',otpSent:'SMS ကုဒ် ပို့ပြီးပါပြီ -',enterOtp:'SMS ထဲမှ ဂဏန်း ၆ လုံး ကုဒ်ကို ထည့်ပါ',confirm:'အတည်ပြုရန်',back:'နောက်သို့',ok:'အိုကေ',cancel:'မလုပ်တော့ပါ',save:'သိမ်းရန်',
+errPhone:'ဖုန်းနံပါတ် ဂဏန်း ၁၀ လုံး ထည့်ပါ',errNotFound:'ဤဖုန်းနံပါတ်သည် ဝန်ထမ်းစာရင်းတွင် မရှိပါ။ HR ကို ဆက်သွယ်ပါ။',errResigned:'ဤအကောင့်ကို ပိတ်ထားပါသည် (အလုပ်ထွက်)။ HR ကို ဆက်သွယ်ပါ။',errOtp:'ကုဒ် မှားနေပါသည်။ ထပ်ကြိုးစားပါ။',
+errBuddyT:'အခြားသူအစား မှတ်ခွင့်မရှိပါ',errBuddy:'ဤဖုန်းကို<br><b>{name}</b><br>အတွက် မှတ်ပုံတင်ပြီးဖြစ်သည်။ ဖုန်း ၁ လုံး = လူ ၁ ယောက်သာ။',errOtherT:'ဤနံပါတ်ကို အခြားဖုန်းတွင် ချိတ်ထားပြီး',errOther:'ဖုန်းအသစ် ပြောင်းပါက Admin ကို အရင်ပြန်သတ်မှတ်ခိုင်းပါ။',errKicked:'Admin က သင့်အကောင့်ကို ပြန်သတ်မှတ် (သို့) ပိတ်ထားပါသည်။ ထပ်မံ စာရင်းသွင်းပါ။',
+hello:'မင်္ဂလာပါ',clockIn:'အလုပ်ဝင်',clockOut:'အလုပ်ဆင်း',tapHint:'တစ်ချက်နှိပ်ရုံဖြင့် အချိန်နှင့် တည်နေရာကို အလိုအလျောက် မှတ်ပါမည်',inAt:'အလုပ်ဝင်ချိန်',outAt:'အလုပ်ဆင်းချိန်',notYet:'မမှတ်ရသေး',doneToday:'ယနေ့ အချိန်မှတ်ပြီးပါပြီ။ ကျေးဇူးတင်ပါသည်',late:'နောက်ကျ',onTime:'အချိန်မှန်',locating:'အချိန်နှင့် တည်နေရာ မှတ်နေသည်...',savedIn:'အလုပ်ဝင်ချိန် မှတ်ပြီး',savedOut:'အလုပ်ဆင်းချိန် မှတ်ပြီး',location:'တည်နေရာ',map:'မြေပုံ ›',simLoc:'(စမ်းသပ်)',recent:'မကြာသေးမီ မှတ်တမ်း',onLeaveToday:'ယနေ့ သင့်တွင် ခွင့်ပြုထားသော ခွင့်ရှိသည်',confirmOut:'ယခု အလုပ်ဆင်းမလား?',
+nTime:'အချိန်မှတ်',nLeave:'ခွင့်',nAdv:'ကြိုတင်ငွေ',nSum:'အနှစ်ချုပ်',nAdmin:'Admin',
+leaveTitle:'ခွင့်တောင်းရန်',chooseType:'၁။ ခွင့်အမျိုးအစား ရွေးပါ',sick:'ဆေးခွင့်',personal:'ကိစ္စခွင့်',vacation:'အားလပ်ခွင့်',other:'အခြား',dates:'၂။ ရက်စွဲ ရွေးပါ',from:'မှ',to:'ထိ',reason:'၃။ အကြောင်းပြချက် (မဖြည့်လည်းရ)',submit:'တောင်းဆိုမည်',sent:'တောင်းဆိုပြီး။ ခွင့်ပြုချက် စောင့်ပါ။',myReq:'ကျွန်ုပ်၏ တောင်းဆိုချက်များ',none:'မရှိသေးပါ',days:'ရက်',pending:'စောင့်ဆိုင်းဆဲ',approved:'ခွင့်ပြုသည်',rejected:'ခွင့်မပြုပါ',cancelReq:'ပယ်ဖျက်ရန်',errType:'ခွင့်အမျိုးအစား ရွေးပါ',errDate:'ရက်စွဲ မမှန်ပါ',
+advTitle:'လစာ ကြိုတင်ထုတ်ယူခြင်း',nick:'အကွက် ၁ · အမည်ပြောင်',amount:'အကွက် ၂ · ငွေပမာဏ (ဘတ်)',advSent:'ကြိုတင်ငွေ တောင်းဆိုပြီး',errAdv:'အမည်ပြောင်နှင့် ငွေပမာဏ ဖြည့်ပါ',aRequested:'ငွေလွှဲရန် စောင့်ဆဲ',aTransferred:'လွှဲပြီး · အတည်ပြုပါ',aReceived:'ရရှိပြီး',aNotReceived:'မရရှိသေးကြောင်း ပြောထား',gotIt:'✓ ငွေရပြီ',notGot:'✗ မရသေးပါ',advMonth:'ဤလ ကြိုတင်ငွေ',baht:'ဘတ်',confirmMoney:'ငွေ ရောက်ပြီလား?',
+sumTitle:'လစဉ် အနှစ်ချုပ်',work:'အလုပ်ဆင်းရက်',lateDays:'နောက်ကျရက်',leaveDays:'ခွင့်ရက်',hours:'စုစုပေါင်း နာရီ',hr:'နာရီ',advTotal:'ကြိုတင်ငွေ',export:'⬇ Excel ဒေါင်းလုဒ်',daily:'နေ့စဉ်',dl:'Excel ပြင်ဆင်နေသည်...',dlOk:'ဒေါင်းလုဒ် ပြီးပါပြီ',dlNo:'ဤနေရာတွင် ဒေါင်းလုဒ် မရပါ',
+admin:'Admin',live:'တိုက်ရိုက်',approvals:'ခွင့်ပြုရန်',staff:'ဝန်ထမ်း',reports:'အစီရင်ခံစာ',settings:'ဆက်တင်',updated:'နောက်ဆုံး အပ်ဒိတ်',all:'အားလုံး',working:'အလုပ်လုပ်နေ',left:'အလုပ်ဆင်းပြီး',absent:'မဝင်ရသေး',onLeave:'ခွင့်',leaveReq:'ခွင့်တောင်းချက်များ',advReq:'ကြိုတင်ငွေ တောင်းချက်များ',approve:'ခွင့်ပြု',reject:'ခွင့်မပြု',markPaid:'ငွေလွှဲပြီး',history:'ပြီးဆုံးပြီး',empNotGot:'ဝန်ထမ်းက ငွေမရသေးဟု ပြောသည်',
+addEmp:'+ ဝန်ထမ်းသစ် ထည့်ရန်',edit:'ပြင်ရန်',resign:'အလုပ်ထွက်',rehire:'ပြန်ဝင်',resetDev:'ဖုန်း ပြန်သတ်မှတ်',empId:'ဝန်ထမ်း ID',empName:'အမည်',position:'ရာထူး',isAdmin:'Admin ဖြစ်သည်',active:'အလုပ်လုပ်ဆဲ',resigned:'အလုပ်ထွက်ပြီး',bound:'ဖုန်း ချိတ်ပြီး',unbound:'စာရင်းမသွင်းရသေး',noPhone:'ဖုန်းနံပါတ် မရှိသေး',search:'အမည် / ID / ဖုန်း ရှာရန်',errDup:'ID သို့မဟုတ် ဖုန်း ရှိပြီးသား',errReq:'ID၊ အမည်၊ ဖုန်း ဖြည့်ပါ',confirmResign:'အလုပ်ထွက်ကြောင်း အတည်ပြုမလား?',confirmReset:'ဖုန်း ပြန်သတ်မှတ်မလား? ဝန်ထမ်းသည် ဖုန်းအသစ်တွင် ထပ်မံ စာရင်းသွင်းရမည်။',
+workStart:'အလုပ်ဝင်ချိန်',workEnd:'အလုပ်ဆင်းချိန်',grace:'နောက်ကျ ခွင့်ပြုမိနစ်',saved:'သိမ်းပြီး',exportAll:'⬇ တစ်လစာ Excel ထုတ်ရန်',newLeaveNoti:'ခွင့်ပြုရန် တောင်းဆိုချက်အသစ် {n} ခု',logout:'ထွက်ရန်',
+}};
+const T2={
+th:{pendTitle:'รอผู้ดูแลระบบอนุมัติ',pendBody:'ลงทะเบียนสำเร็จแล้ว กรุณาแจ้งผู้ดูแลระบบให้กดอนุมัติ และแสดงรหัสเครื่องนี้ให้ดู',devCode:'รหัสเครื่อง',checkAgain:'ตรวจสอบอีกครั้ง',loading:'กำลังโหลด...',saving:'กำลังบันทึก...',
+errNet:'เชื่อมต่อไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่',errLocT:'หาตำแหน่งไม่ได้',errLoc:'กรุณาเปิด GPS (ตำแหน่ง) ในมือถือ และกด "อนุญาต" เมื่อแอปถาม',retry:'ลองอีกครั้ง',noLocSave:'บันทึกโดยไม่มีตำแหน่ง',noLoc:'ไม่มีตำแหน่ง',
+errAlready:'วันนี้บันทึกไปแล้ว',errGeneric:'เกิดข้อผิดพลาด กรุณาลองใหม่',regReq:'ลงทะเบียนมือถือใหม่',approveDev:'อนุมัติเครื่อง',devPending:'รออนุมัติเครื่อง',
+installT:'📲 ติดตั้งแอปไว้ที่หน้าจอ (ทำครั้งเดียว ก่อนลงทะเบียน)',installIos:'iPhone: เปิดด้วย Safari → กดปุ่มแชร์ ⬆️ ด้านล่าง → เลือก "เพิ่มไปยังหน้าจอโฮม" → แล้วเปิดแอปจากไอคอน CE2',installAnd:'Android: กดเมนู ⋮ มุมขวาบน → "ติดตั้งแอป" หรือ "เพิ่มลงในหน้าจอหลัก" → แล้วเปิดแอปจากไอคอน CE2',installBtn:'ติดตั้งแอปเลย',
+noConfig:'ยังไม่ได้ใส่ API_URL ในไฟล์ config.js',notSetup:'ระบบหลังบ้านยังไม่ได้ตั้งค่า (ให้ HR กด setup ใน Apps Script)',emails:'อีเมลแจ้งเตือนผู้ดูแล (คั่นด้วย ,)',
+serverTime:'เวลาจากเซิร์ฟเวอร์',reload:'โหลดใหม่',sheetNote:'ดูและแก้ข้อมูลทั้งหมดได้ใน Google Sheet ของบริษัทด้วย'},
+en:{pendTitle:'Waiting for admin approval',pendBody:'Registered. Please ask an admin to approve, and show them this device code.',devCode:'Device code',checkAgain:'Check again',loading:'Loading...',saving:'Saving...',
+errNet:'Cannot connect. Check your internet and try again.',errLocT:'Location not found',errLoc:'Turn on GPS (Location) and tap "Allow" when the app asks.',retry:'Try again',noLocSave:'Save without location',noLoc:'No location',
+errAlready:'Already recorded today',errGeneric:'Something went wrong. Please try again.',regReq:'New phone registrations',approveDev:'Approve device',devPending:'Device pending',
+installT:'📲 Add the app to your home screen (once, before registering)',installIos:'iPhone: open in Safari → tap Share ⬆️ → "Add to Home Screen" → open the app from the CE2 icon',installAnd:'Android: tap menu ⋮ → "Install app" or "Add to Home screen" → open the app from the CE2 icon',installBtn:'Install app',
+noConfig:'API_URL is missing in config.js',notSetup:'Backend not set up yet (HR must run setup in Apps Script)',emails:'Admin alert emails (comma separated)',
+serverTime:'Server time',reload:'Reload',sheetNote:'All data can also be viewed and edited in the company Google Sheet'},
+my:{pendTitle:'Admin ခွင့်ပြုချက် စောင့်နေသည်',pendBody:'စာရင်းသွင်းပြီးပါပြီ။ Admin ကို ခွင့်ပြုခိုင်းပြီး ဤဖုန်းကုဒ်ကို ပြပါ။',devCode:'ဖုန်းကုဒ်',checkAgain:'ထပ်စစ်ရန်',loading:'ဖွင့်နေသည်...',saving:'သိမ်းနေသည်...',
+errNet:'ချိတ်ဆက်၍ မရပါ။ အင်တာနက် စစ်ပြီး ထပ်ကြိုးစားပါ။',errLocT:'တည်နေရာ မတွေ့ပါ',errLoc:'ဖုန်းတွင် GPS (Location) ဖွင့်ပြီး အက်ပ်က မေးလျှင် "Allow" နှိပ်ပါ။',retry:'ထပ်ကြိုးစား',noLocSave:'တည်နေရာမပါဘဲ မှတ်ရန်',noLoc:'တည်နေရာ မရှိ',
+errAlready:'ယနေ့ မှတ်ပြီးသား',errGeneric:'အမှားဖြစ်နေသည်။ ထပ်ကြိုးစားပါ။',regReq:'ဖုန်းအသစ် စာရင်းသွင်းမှု',approveDev:'ဖုန်း ခွင့်ပြု',devPending:'ဖုန်း စောင့်ဆဲ',
+installT:'📲 ဖုန်းမျက်နှာပြင်တွင် အက်ပ်ထည့်ပါ (စာရင်းမသွင်းမီ တစ်ကြိမ်)',installIos:'iPhone: Safari ဖြင့်ဖွင့် → Share ⬆️ နှိပ် → "Add to Home Screen" → CE2 အိုင်ကွန်မှ ဖွင့်ပါ',installAnd:'Android: ⋮ မီနူး → "Install app" / "Add to Home screen" → CE2 အိုင်ကွန်မှ ဖွင့်ပါ',installBtn:'အက်ပ် ထည့်ရန်',
+noConfig:'config.js တွင် API_URL မရှိသေးပါ',notSetup:'စနစ် မပြင်ဆင်ရသေးပါ (HR က setup လုပ်ရမည်)',emails:'Admin အီးမေးလ်',
+serverTime:'ဆာဗာ အချိန်',reload:'ပြန်ဖွင့်',sheetNote:'ဒေတာအားလုံးကို ကုမ္ပဏီ Google Sheet တွင်လည်း ကြည့်/ပြင်နိုင်သည်'}};
+['th','en','my'].forEach(l=>Object.assign(T[l],T2[l]));
+const LOCALE={th:'th-TH-u-ca-buddhist',en:'en-GB',my:'my-MM'};
+
+/* ===================== HELPERS ===================== */
+const digits=s=>String(s||'').replace(/\D/g,'');
+const fmtPhone=p=>{p=digits(p);return p.length===10?p.slice(0,3)+'-'+p.slice(3,6)+'-'+p.slice(6):p};
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseYmd=s=>{const a=String(s).slice(0,10).split('-').map(Number);return new Date(a[0],a[1]-1,a[2])};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>Number(n||0).toLocaleString('en-US');
+const initials=n=>String(n||'').replace(/^(นาย|นางสาว|นาง)/,'').trim().slice(0,2);
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const curMonth=()=>ymd(new Date()).slice(0,7);
+function t(k,v){let s=(T[st.lang]&&T[st.lang][k]!=null)?T[st.lang][k]:(T.th[k]!=null?T.th[k]:k);if(v)for(const x in v)s=s.replace('{'+x+'}',v[x]);return s}
+function fmtDate(d,opt){try{return d.toLocaleDateString(LOCALE[st.lang],opt||{weekday:'long',day:'numeric',month:'long',year:'numeric'})}catch(e){return ymd(d)}}
+function monthLabel(m){const [y,mo]=m.split('-').map(Number);try{return new Date(y,mo-1,1).toLocaleDateString(LOCALE[st.lang],{month:'long',year:'numeric'})}catch(e){return m}}
+function shiftMonth(m,d){let [y,mo]=m.split('-').map(Number);mo+=d;if(mo<1){mo=12;y--}if(mo>12){mo=1;y++}return y+'-'+pad(mo)}
+function sd(s,opt){return s?fmtDate(parseYmd(s),opt||{day:'numeric',month:'short'}):''}
+function daysInMonth(l,m){let n=0;for(let d=parseYmd(l.from),i=0;ymd(d)<=l.to&&i<400;d=addDays(d,1),i++){if(d.getDay()!==0&&ymd(d).slice(0,7)===m)n++}return n}
+function stats(logs,leaves,advances,empId,m){
+  logs=(logs||[]).filter(l=>l.empId===empId&&l.date.slice(0,7)===m).sort((a,b)=>a.date<b.date?-1:1);
+  const lv={sick:0,personal:0,vacation:0,other:0};
+  (leaves||[]).filter(l=>l.empId===empId&&l.status==='approved').forEach(l=>lv[l.type]=(lv[l.type]||0)+daysInMonth(l,m));
+  const adv=(advances||[]).filter(a=>a.empId===empId&&String(a.created).slice(0,7)===m).reduce((s,a)=>s+Number(a.amount||0),0);
+  return{logs,work:logs.length,late:logs.filter(l=>l.late).length,hours:logs.reduce((s,l)=>s+Number(l.hours||0),0),lv,leave:lv.sick+lv.personal+lv.vacation+lv.other,adv};
+}
+
+/* ===================== STATE ===================== */
+const st={lang:lsGet(KL)||'th',view:'loading',tab:'time',atab:'live',me:null,settings:{start:'08:30',end:'17:30',grace:5,emails:''},today:null,pendingCount:0,
+  my:{},live:null,pend:null,emps:null,rep:{},phone:'',leaveType:'',sumMonth:curMonth(),repMonth:curMonth(),q:'',busy:false,loading:{},fatal:''};
+
+/* ===================== API ===================== */
+async function api(action,data){
+  if(!/^https:\/\//.test(API_URL))throw{error:'NO_CONFIG'};
+  let r,j;
+  try{r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:action,deviceId:DEVICE},data||{})),redirect:'follow'})}catch(e){throw{error:'NET'}}
+  try{j=await r.json()}catch(e){throw{error:'NET'}}
+  if(!j||!j.ok)throw(j||{error:'NET'});
+  return j;
+}
+function applyMe(j){
+  st.me=j.me;if(j.settings)st.settings=j.settings;st.today=j.today||null;st.pendingCount=j.pendingCount||0;
+  st.view=j.me.devStatus==='approved'?'home':'pending';
+}
+function handleErr(e){
+  const c=(e&&e.error)||'NET';closeModal();
+  switch(c){
+    case 'NET':return err(t('errNet'),'');
+    case 'NO_CONFIG':st.view='fatal';st.fatal=t('noConfig');return render();
+    case 'NOT_SETUP':st.view='fatal';st.fatal=t('notSetup');return render();
+    case 'BAD_PHONE':return err(t('errPhone'),'');
+    case 'NOT_FOUND':return err(st.view==='login'?t('errNotFound'):t('errGeneric'),'');
+    case 'RESIGNED':st.view='login';st.me=null;render();return err(t('errResigned'),'');
+    case 'DEVICE_TAKEN':return modal({icon:'🚫',kind:'err',title:t('errBuddyT'),body:`<p style="font-size:19px">${t('errBuddy',{name:esc(e.name)})}</p><p class="muted small">ERROR: DEVICE_ALREADY_BOUND · ${devCode()}</p>`});
+    case 'PHONE_OTHER_DEVICE':return modal({icon:'📵',kind:'err',title:t('errOtherT'),body:`<p>${t('errOther')}</p><p class="muted small">ERROR: PHONE_BOUND_TO_OTHER_DEVICE</p>`});
+    case 'NOT_REGISTERED':st.view='login';st.me=null;render();return err(t('errKicked'),'');
+    case 'DEVICE_PENDING':st.view='pending';return render();
+    case 'ALREADY_IN':case 'ALREADY_OUT':refreshMe();return err(t('errAlready'),'');
+    case 'DUPLICATE':return err(t('errDup'),'');
+    case 'REQUIRED':return err(t('errReq'),'');
+    case 'BAD_DATE':return err(t('errDate'),'');
+    case 'BAD_TYPE':return err(t('errType'),'');
+    case 'BAD_ADVANCE':return err(t('errAdv'),'');
+    default:return err(t('errGeneric'),'<p class="muted small">'+esc(c)+(e&&e.message?' · '+esc(e.message):'')+'</p>');
+  }
+}
+async function refreshMe(){try{applyMe(await api('me'));render()}catch(e){handleErr(e)}}
+async function boot(){
+  st.view='loading';render();
+  if(!/^https:\/\//.test(API_URL)){st.view='fatal';st.fatal=t('noConfig');return render()}
+  try{applyMe(await api('me'))}
+  catch(e){
+    if(e&&e.error==='NOT_REGISTERED'){st.view='login'}
+    else if(e&&e.error==='RESIGNED'){st.view='login';render();return err(t('errResigned'),'')}
+    else if(e&&e.error==='NOT_SETUP'){st.view='fatal';st.fatal=t('notSetup')}
+    else{st.view='fatal';st.fatal=t('errNet')}
+  }
+  render();
+}
+
+/* ===================== UI PRIMITIVES ===================== */
+function toast(msg){const el=document.getElementById('toast');el.innerHTML='<div>'+esc(msg)+'</div>';clearTimeout(toast._t);toast._t=setTimeout(()=>el.innerHTML='',2400)}
+let modalBtns=[];
+function modal(o){
+  const icon=o.icon||'',title=o.title||'',body=o.body||'',kind=o.kind||'';
+  modalBtns=o.buttons||[{label:t('ok'),fn:closeModal}];
+  const stack=o.stack||modalBtns.length>2;
+  document.getElementById('modal').innerHTML=`<div class="bg"><div class="box ${kind} ${o.form?'form':''}">${icon?`<div class="ico">${icon}</div>`:''}${title?`<h2>${title}</h2>`:''}<div>${body}</div>${modalBtns.length?`<div class="${stack?'stack':(modalBtns.length>1?'row':'')}">${modalBtns.map((b,i)=>`<button class="btn ${b.cls||''}" onclick="modalBtns[${i}].fn()">${b.label}</button>`).join('')}</div>`:'<div class="spin"></div>'}</div></div>`;
+}
+function closeModal(){document.getElementById('modal').innerHTML=''}
+function modalOpen(){return !!document.getElementById('modal').innerHTML}
+function err(title,body){modal({icon:'⛔',title:title,body:body,kind:'err'})}
+function confirmBox(msg,fn,cls){modal({icon:'❓',title:msg,buttons:[{label:t('cancel'),cls:'ghost',fn:closeModal},{label:t('confirm'),cls:cls||'r',fn:()=>{closeModal();fn()}}]})}
+function busy(title){modal({icon:'⏳',title:title||t('saving'),buttons:[]})}
+async function act(action,data,okMsg,after){
+  busy();
+  try{const j=await api(action,data);closeModal();if(okMsg)toast(okMsg);if(after)after(j);render();return j}
+  catch(e){handleErr(e)}
+}
+const loadingBox=()=>`<div class="loadbox"><div class="spin"></div>${t('loading')}</div>`;
+
+/* ===================== DATA LOADERS ===================== */
+function load(key,fn){
+  if(st.loading[key])return;st.loading[key]=1;
+  fn().then(()=>{st.loading[key]=0;render()}).catch(e=>{st.loading[key]=0;handleErr(e)});
+}
+function ensureMy(m,force){if(force||!st.my[m])load('my'+m,async()=>{st.my[m]=await api('myData',{month:m})})}
+function ensureLive(force){if(force||!st.live)load('live',async()=>{st.live=await api('adminLive');st.pendingCount=st.live.pendingCount})}
+function ensurePend(force){if(force||!st.pend)load('pend',async()=>{st.pend=await api('adminPending');st.pendingCount=st.pend.registrations.length+st.pend.leaves.length+st.pend.advances.length})}
+function ensureEmps(force){if(force||!st.emps)load('emps',async()=>{st.emps=(await api('adminEmployees')).employees})}
+function ensureRep(m,force){if(force||!st.rep[m])load('rep'+m,async()=>{st.rep[m]=await api('adminMonth',{month:m})})}
+function invalidateAdmin(){st.live=null;st.pend=null;st.emps=null;st.rep={}}
+
+/* ===================== ACTIONS ===================== */
+async function goNext(){
+  const p=digits(document.getElementById('ph').value);st.phone=p;
+  if(p.length!==10)return err(t('errPhone'),'');
+  busy(t('loading'));
+  try{const j=await api('register',{phone:p});closeModal();applyMe(j);render();if(st.view==='home')toast(t('welcome')+' '+j.me.name)}
+  catch(e){handleErr(e)}
+}
+function logout(){st.view='login';st.me=null;render()}
+function getLoc(){
+  return new Promise(res=>{
+    try{
+      if(!navigator.geolocation)return res(null);
+      let done=false;const tm=setTimeout(()=>{if(!done){done=true;res(null)}},16000);
+      navigator.geolocation.getCurrentPosition(p=>{if(done)return;done=true;clearTimeout(tm);res({lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy||0)})},
+        ()=>{if(done)return;done=true;clearTimeout(tm);res(null)},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+    }catch(e){res(null)}
+  });
+}
+function punch(kind){
+  if(st.busy)return;
+  const send=async loc=>{
+    st.busy=true;busy();
+    try{
+      const j=await api('clock',Object.assign({kind:kind},loc||{}));
+      st.busy=false;applyMe(j);delete st.my[curMonth()];st.live=null;
+      const l=j.today||{},time=kind==='in'?l.in:l.out,loc2=kind==='in'?l.inLoc:l.outLoc,map=kind==='in'?l.inMap:l.outMap;
+      modal({icon:'✅',kind:'ok',title:kind==='in'?t('savedIn'):t('savedOut'),
+        body:`<div style="font-size:52px;font-weight:800">${esc(time)}</div>${kind==='in'?`<span class="pill ${l.late?'p-r':'p-g'}">${l.late?t('late'):t('onTime')}</span>`:''}<p class="small muted">📍 ${map?esc(loc2):t('noLoc')}${map?`<br><a class="map" href="${esc(map)}" target="_blank" rel="noopener">${t('map')}</a>`:''}</p>`,
+        buttons:[{label:t('ok'),cls:'g',fn:()=>{closeModal();render()}}]});
+    }catch(e){st.busy=false;handleErr(e)}
+  };
+  const withLoc=async()=>{
+    modal({icon:'📍',title:t('locating'),buttons:[]});
+    const loc=await getLoc();
+    if(loc)return send(loc);
+    modal({icon:'📍',kind:'err',title:t('errLocT'),body:`<p>${t('errLoc')}</p>`,stack:true,buttons:[{label:'🔄 '+t('retry'),cls:'g',fn:withLoc},{label:t('noLocSave'),cls:'ghost',fn:()=>send(null)},{label:t('cancel'),cls:'ghost',fn:closeModal}]});
+  };
+  if(kind==='out')confirmBox(t('confirmOut'),withLoc,'r');else withLoc();
+}
+function pickType(tp){st.leaveType=tp;const f=document.getElementById('lf'),to=document.getElementById('lt'),r=document.getElementById('lr');const keep={f:f&&f.value,t:to&&to.value,r:r&&r.value};render();
+  if(keep.f){document.getElementById('lf').value=keep.f;document.getElementById('lt').value=keep.t;document.getElementById('lr').value=keep.r}}
+function submitLeave(){
+  const from=document.getElementById('lf').value,to=document.getElementById('lt').value,reason=document.getElementById('lr').value.trim();
+  if(!st.leaveType)return err(t('errType'),'');
+  if(!from||!to||to<from)return err(t('errDate'),'');
+  act('leave',{type:st.leaveType,from:from,to:to,reason:reason},null,()=>{st.leaveType='';st.my={};document.getElementById('lr').value='';setTimeout(()=>modal({icon:'📨',kind:'ok',title:t('sent'),buttons:[{label:t('ok'),cls:'g',fn:closeModal}]}),0)});
+}
+function cancelLeave(id){confirmBox(t('cancelReq')+'?',()=>act('cancelLeave',{id:id},t('saved'),()=>{st.my={}}))}
+function submitAdv(){
+  const nick=document.getElementById('an').value.trim(),amt=Number(digits(document.getElementById('aa').value));
+  if(!nick||!amt)return err(t('errAdv'),'');
+  act('advance',{nickname:nick,amount:amt},null,()=>{st.my={};document.getElementById('aa').value='';if(st.me)st.me.nickname=nick;
+    setTimeout(()=>modal({icon:'💰',kind:'ok',title:t('advSent'),body:`<div style="font-size:34px;font-weight:800">${money(amt)} ${t('baht')}</div>`,buttons:[{label:t('ok'),cls:'g',fn:closeModal}]}),0)});
+}
+function advConfirm(id,ok){act('advConfirm',{id:id,ok:ok},ok?t('aReceived'):t('aNotReceived'),()=>{st.my={}})}
+/* admin */
+function decideLeave(id,ok){act('decideLeave',{id:id,ok:ok},ok?t('approved'):t('rejected'),invalidateAdmin)}
+function markPaid(id){act('markPaid',{id:id},t('markPaid'),invalidateAdmin)}
+function approveDev(empId,ok){act('approveDevice',{empId:empId,ok:ok},ok?t('approved'):t('rejected'),invalidateAdmin)}
+function toggleResign(id){const e=(st.emps||[]).find(x=>x.id===id);if(!e)return;
+  const f=()=>act('setActive',{empId:id,active:!e.active},t('saved'),invalidateAdmin);
+  if(e.active)confirmBox(t('confirmResign')+'<br><small>'+esc(e.name)+'</small>',f);else f()}
+function resetDev(id){confirmBox(t('confirmReset'),()=>act('resetDevice',{empId:id},t('saved'),invalidateAdmin),'b')}
+function empForm(id){
+  const e=id?(st.emps||[]).find(x=>x.id===id):{id:'',name:'',phone:'',position:'',isAdmin:false};
+  modal({form:true,title:id?t('edit'):t('addEmp'),body:`
+  <label class="f">${t('empId')}</label><input class="in" id="fe_id" value="${esc(e.id)}" ${id?'disabled':''}>
+  <label class="f">${t('empName')}</label><input class="in" id="fe_nm" value="${esc(e.name)}">
+  <label class="f">${t('phone')}</label><input class="in" id="fe_ph" type="tel" inputmode="tel" value="${esc(e.phone)}" placeholder="08x-xxx-xxxx">
+  <label class="f">${t('position')}</label><input class="in" id="fe_po" value="${esc(e.position)}">
+  <label class="f" style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="fe_ad" ${e.isAdmin?'checked':''} style="width:24px;height:24px"> ${t('isAdmin')}</label>`,
+  buttons:[{label:t('cancel'),cls:'ghost',fn:closeModal},{label:t('save'),cls:'g',fn:()=>saveEmp(id)}]});
+}
+function saveEmp(id){
+  const emp={id:(id||document.getElementById('fe_id').value).trim(),name:document.getElementById('fe_nm').value.trim(),phone:digits(document.getElementById('fe_ph').value),position:document.getElementById('fe_po').value.trim(),isAdmin:document.getElementById('fe_ad').checked};
+  if(!emp.id||!emp.name)return toast(t('errReq'));
+  if(emp.phone&&emp.phone.length!==10)return toast(t('errPhone'));
+  act('saveEmployee',{emp:emp,isNew:!id},t('saved'),invalidateAdmin);
+}
+function saveSettings(){
+  const s={start:document.getElementById('s1').value||'08:30',end:document.getElementById('s2').value||'17:30',grace:Number(document.getElementById('s3').value||0),emails:document.getElementById('s4').value.trim()};
+  act('saveSettings',{settings:s},t('saved'),j=>{st.settings=j.settings;invalidateAdmin()});
+}
+
+/* ===================== EXCEL ===================== */
+const TYPE_TH={sick:'ลาป่วย',personal:'ลากิจ',vacation:'ลาพักร้อน',other:'ลาอื่นๆ'};
+const LST_TH={pending:'รออนุมัติ',approved:'อนุญาต',rejected:'ไม่อนุญาต'};
+const AST_TH={requested:'รอโอน',transferred:'โอนแล้ว',received:'ได้รับแล้ว',notReceived:'ยังไม่ได้รับ'};
+const LOGH=['วันที่','รหัส','ชื่อ','เวลาเข้า','สถานะ','พิกัดเข้า','แผนที่เข้า','เวลาออก','พิกัดออก','แผนที่ออก','ชั่วโมง'];
+const LOGW=[12,7,26,9,9,20,42,9,20,42,8];
+function logRow(l){return[l.date,l.empId,l.name,l.in,l.late?'สาย':'ตรงเวลา',l.inLoc,l.inMap,l.out||'',l.outLoc||'',l.outMap||'',Number(l.hours||0)]}
+function sheet(rows,w){const ws=XLSX.utils.aoa_to_sheet(rows);if(w)ws['!cols']=w.map(x=>({wch:x}));return ws}
+function saveBook(wb,filename){
+  if(typeof XLSX==='undefined')return err(t('dlNo'),'');
+  try{
+    const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);toast(t('dlOk'));
+  }catch(e){err(t('dlNo'),'')}
+}
+function exportMine(){
+  const m=st.sumMonth,d=st.my[m];if(!d)return;const e=st.me,s=stats(d.logs,d.leaves,d.advances,e.id,m);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,sheet([['สรุปประจำเดือน',m],['รหัส',e.id],['ชื่อ',e.name],['ตำแหน่ง',e.position],[],['วันทำงาน',s.work],['วันมาสาย',s.late],['ลาป่วย',s.lv.sick],['ลากิจ',s.lv.personal],['ลาพักร้อน',s.lv.vacation],['ลาอื่นๆ',s.lv.other],['รวมวันลา',s.leave],['ชั่วโมงรวม',+s.hours.toFixed(2)],['ยอดเบิกเงิน (บาท)',s.adv]],[20,30]),'สรุป');
+  XLSX.utils.book_append_sheet(wb,sheet([LOGH].concat(s.logs.map(logRow)),LOGW),'บันทึกเวลา');
+  saveBook(wb,'CE2_'+e.id+'_'+m+'.xlsx');
+}
+function exportAll(){
+  const m=st.repMonth,d=st.rep[m];if(!d)return;const wb=XLSX.utils.book_new();
+  const sum=[['รหัส','ชื่อ','ตำแหน่ง','สถานะ','วันทำงาน','มาสาย(วัน)','ลาป่วย','ลากิจ','ลาพักร้อน','ลาอื่นๆ','รวมวันลา','ชั่วโมงรวม','ยอดเบิก(บาท)']];
+  d.employees.forEach(e=>{const s=stats(d.logs,d.leaves,d.advances,e.id,m);sum.push([e.id,e.name,e.position,e.active?'ทำงานอยู่':'ลาออก',s.work,s.late,s.lv.sick,s.lv.personal,s.lv.vacation,s.lv.other,s.leave,+s.hours.toFixed(2),s.adv])});
+  XLSX.utils.book_append_sheet(wb,sheet(sum,[7,26,22,10,9,10,7,7,9,8,9,10,12]),'สรุปรายเดือน');
+  const logs=d.logs.slice().sort((a,b)=>a.date===b.date?String(a.empId).localeCompare(b.empId):(a.date<b.date?-1:1));
+  XLSX.utils.book_append_sheet(wb,sheet([LOGH].concat(logs.map(logRow)),LOGW),'บันทึกเวลา');
+  XLSX.utils.book_append_sheet(wb,sheet([['รหัส','ชื่อ','ประเภท','ตั้งแต่','ถึง','จำนวนวัน','เหตุผล','สถานะ','ผู้อนุมัติ','วันที่ส่ง']].concat(d.leaves.map(l=>[l.empId,l.name,TYPE_TH[l.type],l.from,l.to,l.days,l.reason,LST_TH[l.status],l.by||'',l.created])),[7,26,10,12,12,9,28,11,26,16]),'การลา');
+  XLSX.utils.book_append_sheet(wb,sheet([['รหัส','ชื่อ','ชื่อเล่น','จำนวนเงิน','สถานะ','วันที่ขอ','วันที่โอน','ผู้โอน','วันที่ยืนยัน']].concat(d.advances.map(a=>[a.empId,a.name,a.nickname,a.amount,AST_TH[a.status],a.created,a.paidAt||'',a.paidBy||'',a.confirmedAt||''])),[7,26,12,12,14,16,16,24,16]),'การเบิกเงิน');
+  XLSX.utils.book_append_sheet(wb,sheet([['รหัส','ชื่อ','เบอร์โทร','ตำแหน่ง','สถานะ','ผู้ดูแลระบบ','มือถือ']].concat(d.employees.map(e=>[e.id,e.name,e.phone||'รอเบอร์',e.position,e.active?'ทำงานอยู่':'ลาออก',e.isAdmin?'ใช่':'',e.devStatus==='approved'?'อนุมัติแล้ว':e.devStatus==='pending'?'รออนุมัติ':'ยังไม่ลงทะเบียน'])),[7,26,14,22,10,10,16]),'รายชื่อพนักงาน');
+  saveBook(wb,'CE2_ลงเวลา_'+m+'.xlsx');
+}
+
+/* ===================== VIEWS ===================== */
+function header(){return `<div class="top"><img src="logo.png" alt="CE-2"><div class="langs">${['th','en','my'].map(l=>`<button class="${st.lang===l?'on':''}" onclick="setLang('${l}')">${{th:'ไทย',en:'EN',my:'မြန်မာ'}[l]}</button>`).join('')}</div></div>`}
+function setLang(l){st.lang=l;lsSet(KL,l);render()}
+const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
+const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(st.view==='login')render()});
+function doInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null}}
+function vLoading(){return header()+`<div class="splash"><img src="logo.png" alt="CE-2"><div class="spin"></div><div class="muted">${t('loading')}</div></div>`}
+function vFatal(){return header()+`<div class="splash"><img src="logo.png" alt="CE-2"><div style="font-size:50px">⚠️</div><h2>${esc(st.fatal)}</h2><button class="btn" onclick="boot()">🔄 ${t('reload')}</button></div>`}
+function vLogin(){
+  const inst=isStandalone()?'':`<div class="card install"><h3>${t('installT')}</h3><div class="small">${isIOS()?t('installIos'):t('installAnd')}</div>${deferredPrompt?`<button class="btn" onclick="doInstall()">${t('installBtn')}</button>`:''}</div>`;
+  return header()+`<div class="splash"><img src="logo.png" alt="CE-2"><h1>${t('app')}</h1><div class="muted">${t('company')}</div></div>${inst}
+  <div class="card"><h3>📱 ${t('loginHint')}</h3><label class="f">${t('phone')}</label>
+  <input class="in" id="ph" type="tel" inputmode="numeric" maxlength="12" placeholder="0xx-xxx-xxxx" value="${esc(fmtPhone(st.phone))}" onkeydown="if(event.key==='Enter')goNext()">
+  <button class="btn" onclick="goNext()">${t('next')} →</button></div>`;
+}
+function vPending(){
+  return header()+`<div class="splash"><div style="font-size:64px">⏳</div><h1>${t('pendTitle')}</h1>${st.me?`<div style="font-weight:700;margin-top:6px">${esc(st.me.name)}</div>`:''}<p class="muted">${t('pendBody')}</p>
+  <div class="card center"><div class="muted">${t('devCode')}</div><div class="code">${devCode()}</div></div>
+  <button class="btn g" onclick="refreshMe()">🔄 ${t('checkAgain')}</button><button class="btn ghost" onclick="logout()">← ${t('back')}</button></div>`;
+}
+function navBar(){
+  const items=[['time','⏰',t('nTime')],['leave','📝',t('nLeave')],['adv','💰',t('nAdv')],['sum','📊',t('nSum')]];
+  if(st.me&&st.me.isAdmin)items.push(['admin','🛡️',t('nAdmin')]);
+  const pc=st.pendingCount;
+  return `<nav class="bn">${items.map(([k,i,l])=>`<button class="${st.tab===k?'on':''}" onclick="goTab('${k}')"><span class="e">${i}</span>${l}${k==='admin'&&pc?`<span class="badge">${pc}</span>`:''}</button>`).join('')}</nav>`;
+}
+function goTab(k){st.tab=k;if(k==='sum')delete st.my[st.sumMonth];if(k==='admin'){if(st.atab==='live')st.live=null;if(st.atab==='appr')st.pend=null}if(k==='leave'||k==='adv')delete st.my[curMonth()];render();scrollTo(0,0)}
+function userBar(e){return `<div class="hello"><div class="muted">${t('hello')} 👋</div><h1>${esc(e.name)}</h1><div class="muted small">${esc(e.id)} · ${esc(e.position)}</div></div>`}
+function statusPill(s){return{pending:`<span class="pill p-a">⏳ ${t('pending')}</span>`,approved:`<span class="pill p-g">✓ ${t('approved')}</span>`,rejected:`<span class="pill p-r">✗ ${t('rejected')}</span>`}[s]||''}
+function advPill(s){return{requested:`<span class="pill p-a">⏳ ${t('aRequested')}</span>`,transferred:`<span class="pill p-b">💸 ${t('aTransferred')}</span>`,received:`<span class="pill p-g">✓ ${t('aReceived')}</span>`,notReceived:`<span class="pill p-r">✗ ${t('aNotReceived')}</span>`}[s]||''}
+function latePill(l){return `<span class="pill ${l.late?'p-r':'p-g'}">${l.late?t('late'):t('onTime')}</span>`}
+function mapLink(url){return url?`<a class="map" href="${esc(url)}" target="_blank" rel="noopener">${t('map')}</a>`:`<span class="muted small">${t('noLoc')}</span>`}
+
+function vTime(e){
+  const log=st.today,now=new Date(),m=curMonth();ensureMy(m);const my=st.my[m];
+  const today=ymd(now);const lv=my&&(my.leaves||[]).find(l=>l.status==='approved'&&today>=l.from&&today<=l.to);
+  let btn;
+  if(!log)btn=`<button class="bigbtn in" onclick="punch('in')"><span class="ic">☀️</span>${t('clockIn')}</button>`;
+  else if(!log.out)btn=`<button class="bigbtn out" onclick="punch('out')"><span class="ic">🏠</span>${t('clockOut')}</button>`;
+  else btn=`<div class="card center" style="background:var(--green2);border-color:transparent"><div style="font-size:48px">🎉</div><h2 style="color:var(--green)">${t('doneToday')}</h2></div>`;
+  const recent=my?(my.logs||[]).slice().sort((a,b)=>a.date<b.date?1:-1).slice(0,6):null;
+  return userBar(e)+`<div class="clock" id="clk">${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}</div><div class="date">${fmtDate(now)}</div>
+  ${lv?`<div class="card center" style="background:var(--blue2);border-color:transparent">🌴 ${t('onLeaveToday')} (${t(lv.type)})</div>`:''}
+  ${btn}${(!log||!log.out)?`<div class="hint">${t('tapHint')}</div>`:''}
+  <div class="card"><div class="status2">
+   <div class="st"><div class="k">☀️ ${t('inAt')}</div><div class="v">${log?esc(log.in):'<span class="muted">'+t('notYet')+'</span>'}</div>${log?latePill(log):''}</div>
+   <div class="st"><div class="k">🏠 ${t('outAt')}</div><div class="v">${log&&log.out?esc(log.out):'<span class="muted">'+t('notYet')+'</span>'}</div></div>
+  </div>${log?`<div class="small muted" style="margin-top:10px">📍 ${t('location')}: ${log.inMap?esc(log.inLoc)+' · ':''}${mapLink(log.inMap)}</div>`:''}</div>
+  <div class="card"><h3>${t('recent')}</h3>${recent?`<div class="list">${recent.length?recent.map(l=>`<div><div><b>${sd(l.date,{weekday:'short',day:'numeric',month:'short'})}</b><div class="small muted">${esc(l.in)} – ${l.out?esc(l.out):'…'}</div></div>${latePill(l)}</div>`).join(''):`<div class="muted">${t('none')}</div>`}</div>`:loadingBox()}</div>
+  <div class="pad"><button class="btn ghost" onclick="logout()">${t('logout')}</button></div>`;
+}
+function vLeave(){
+  const m=curMonth();ensureMy(m);const my=st.my[m];const today=ymd(new Date());
+  const types=[['sick','🤒'],['personal','📋'],['vacation','🏖️'],['other','📌']];
+  return `<div class="hello"><h1>📝 ${t('leaveTitle')}</h1></div>
+  <div class="card"><h3>${t('chooseType')}</h3><div class="types">${types.map(([k,i])=>`<button class="${st.leaveType===k?'on':''}" onclick="pickType('${k}')"><span class="e">${i}</span>${t(k)}</button>`).join('')}</div>
+  <h3 style="margin-top:18px">${t('dates')}</h3><div class="row"><div><label class="f small">${t('from')}</label><input class="in" type="date" id="lf" value="${today}"></div><div><label class="f small">${t('to')}</label><input class="in" type="date" id="lt" value="${today}"></div></div>
+  <h3 style="margin-top:18px">${t('reason')}</h3><textarea class="in" id="lr"></textarea>
+  <button class="btn g" onclick="submitLeave()">📨 ${t('submit')}</button></div>
+  <div class="card"><h3>${t('myReq')}</h3>${my?`<div class="list">${my.leaves.length?my.leaves.map(l=>`<div><div><b>${t(l.type)}</b> · ${l.days} ${t('days')}<div class="small muted">${sd(l.from)}${l.to!==l.from?' – '+sd(l.to):''}${l.reason?' · '+esc(l.reason):''}</div>${l.status==='pending'?`<button class="sbtn o" style="margin-top:6px" onclick="cancelLeave('${esc(l.id)}')">${t('cancelReq')}</button>`:''}</div>${statusPill(l.status)}</div>`).join(''):`<div class="muted">${t('none')}</div>`}</div>`:loadingBox()}</div>`;
+}
+function vAdv(e){
+  const m=curMonth();ensureMy(m);const my=st.my[m];
+  const tot=my?stats([],[],my.advances,e.id,m).adv:0;const last=my&&my.advances[0];
+  return `<div class="hello"><h1>💰 ${t('advTitle')}</h1></div>
+  <div class="card"><label class="f">${t('nick')}</label><input class="in" id="an" value="${esc(e.nickname||(last&&last.nickname)||'')}">
+  <label class="f">${t('amount')}</label><input class="in" id="aa" type="tel" inputmode="numeric" placeholder="0" style="font-size:30px;font-weight:800">
+  <button class="btn g" onclick="submitAdv()">💰 ${t('submit')}</button></div>
+  <div class="card"><div class="row" style="align-items:center"><h3 style="margin:0">${t('myReq')}</h3><div style="text-align:right" class="small muted">${t('advMonth')}<br><b style="font-size:20px;color:var(--ink)">${money(tot)} ${t('baht')}</b></div></div>
+  ${my?`<div class="list" style="margin-top:8px">${my.advances.length?my.advances.map(a=>`<div style="display:block"><div class="row" style="align-items:center"><div><b style="font-size:22px">${money(a.amount)}</b> ${t('baht')}<div class="small muted">${esc(a.nickname)} · ${sd(a.created)}</div></div><div style="text-align:right">${advPill(a.status)}</div></div>
+   ${(a.status==='transferred'||a.status==='notReceived')?`<div class="small" style="margin-top:8px;font-weight:700">${t('confirmMoney')}</div><div class="row" style="margin-top:6px"><button class="sbtn g" onclick="advConfirm('${esc(a.id)}',true)">${t('gotIt')}</button><button class="sbtn r" onclick="advConfirm('${esc(a.id)}',false)">${t('notGot')}</button></div>`:''}</div>`).join(''):`<div class="muted">${t('none')}</div>`}</div>`:loadingBox()}</div>`;
+}
+function monthNav(key){return `<div class="monthnav"><button onclick="st.${key}=shiftMonth(st.${key},-1);render()">‹</button><div class="m">${monthLabel(st[key])}</div><button onclick="st.${key}=shiftMonth(st.${key},1);render()">›</button></div>`}
+function vSum(e){
+  const m=st.sumMonth;ensureMy(m);const d=st.my[m];
+  if(!d)return `<div class="hello"><h1>📊 ${t('sumTitle')}</h1></div>${monthNav('sumMonth')}${loadingBox()}`;
+  const s=stats(d.logs,d.leaves,d.advances,e.id,m);
+  return `<div class="hello"><h1>📊 ${t('sumTitle')}</h1></div>${monthNav('sumMonth')}
+  <div class="pad" style="margin-top:12px"><div class="tiles">
+   <div class="tile"><div class="k">✅ ${t('work')}</div><div class="v">${s.work} <span class="u">${t('days')}</span></div></div>
+   <div class="tile"><div class="k">⏰ ${t('lateDays')}</div><div class="v" style="color:${s.late?'var(--red)':'inherit'}">${s.late} <span class="u">${t('days')}</span></div></div>
+   <div class="tile"><div class="k">🌴 ${t('leaveDays')}</div><div class="v">${s.leave} <span class="u">${t('days')}</span></div><div class="small muted">${t('sick')} ${s.lv.sick} · ${t('personal')} ${s.lv.personal} · ${t('vacation')} ${s.lv.vacation} · ${t('other')} ${s.lv.other}</div></div>
+   <div class="tile"><div class="k">🕒 ${t('hours')}</div><div class="v">${s.hours.toFixed(1)} <span class="u">${t('hr')}</span></div></div>
+   <div class="tile" style="grid-column:1/-1"><div class="k">💰 ${t('advTotal')}</div><div class="v">${money(s.adv)} <span class="u">${t('baht')}</span></div></div>
+  </div><button class="btn b" onclick="exportMine()">${t('export')}</button></div>
+  <div class="card"><h3>${t('daily')}</h3><div class="list">${s.logs.length?s.logs.slice().reverse().map(l=>`<div><div><b>${sd(l.date,{weekday:'short',day:'numeric'})}</b><div class="small muted">${esc(l.in)} – ${l.out?esc(l.out):'…'} · ${Number(l.hours||0).toFixed(1)} ${t('hr')}</div></div>${latePill(l)}</div>`).join(''):`<div class="muted">${t('none')}</div>`}</div></div>`;
+}
+/* ---------- admin ---------- */
+function vAdmin(){
+  const pc=st.pendingCount;
+  const tabs=[['live','🟢 '+t('live')],['appr','📥 '+t('approvals')],['staff','👥 '+t('staff')],['rep','📑 '+t('reports')],['set','⚙️ '+t('settings')]];
+  const body={live:aLive,appr:aAppr,staff:aStaff,rep:aRep,set:aSet}[st.atab]();
+  return `<div class="hello"><h1>🛡️ ${t('admin')}</h1>${pc?`<div class="pill p-r" style="margin-top:4px;cursor:pointer" onclick="aTab('appr')">🔔 ${t('newLeaveNoti',{n:pc})}</div>`:''}</div>
+  <div class="seg">${tabs.map(([k,l])=>`<button class="${st.atab===k?'on':''}" onclick="aTab('${k}')">${l}${k==='appr'&&pc?`<span class="badge">${pc}</span>`:''}</button>`).join('')}</div>${body}`;
+}
+function aTab(k){st.atab=k;if(k==='live')st.live=null;if(k==='appr')st.pend=null;if(k==='staff')st.emps=null;if(k==='rep')delete st.rep[st.repMonth];render()}
+function aLive(){
+  ensureLive();const d=st.live;if(!d)return loadingBox();
+  const rows=d.employees.map(e=>{const l=d.logs.find(x=>x.empId===e.id),lv=d.leaves.find(x=>x.empId===e.id);
+    let s,p;if(l&&l.out){s='left';p='p-n'}else if(l){s='working';p='p-g'}else if(lv){s='onLeave';p='p-b'}else{s='absent';p='p-a'}return{e,l,s,p}});
+  const c=k=>rows.filter(r=>r.s===k).length,lateN=rows.filter(r=>r.l&&r.l.late).length;
+  const order={working:0,left:1,onLeave:2,absent:3};rows.sort((a,b)=>order[a.s]-order[b.s]||String(a.e.id).localeCompare(b.e.id));
+  return `<div class="ts">● ${t('updated')} ${esc(String(d.serverTime||'').slice(11))} <button class="refresh" onclick="ensureLive(true)">↻</button></div>
+  <div class="pad" style="margin-top:8px"><div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+   <div class="tile"><div class="k">${t('working')}</div><div class="v" style="color:var(--green)">${c('working')}</div></div>
+   <div class="tile"><div class="k">${t('left')}</div><div class="v">${c('left')}</div></div>
+   <div class="tile"><div class="k">${t('absent')}</div><div class="v" style="color:var(--amber)">${c('absent')}</div></div>
+   <div class="tile"><div class="k">${t('onLeave')}</div><div class="v" style="color:var(--blue)">${c('onLeave')}</div></div>
+   <div class="tile"><div class="k">${t('late')}</div><div class="v" style="color:var(--red)">${lateN}</div></div>
+   <div class="tile"><div class="k">${t('all')}</div><div class="v">${rows.length}</div></div>
+  </div></div>
+  <div class="card">${rows.map(({e,l,s,p})=>`<div class="emp"><div class="av">${esc(initials(e.name))}</div><div style="flex:1;min-width:0"><div class="row" style="align-items:center"><div class="nm">${esc(e.name)}</div><div style="text-align:right;flex:0 0 auto"><span class="pill ${p}">${t(s)}</span></div></div>
+   <div class="meta">${esc(e.id)} · ${esc(e.position)}</div>
+   ${l?`<div class="meta">☀️ ${esc(l.in)} ${l.late?`<span class="pill p-r" style="font-size:12px">${t('late')}</span>`:''} · 🏠 ${l.out?esc(l.out):'—'} · ${mapLink(l.outMap||l.inMap)}</div>`:''}</div></div>`).join('')}</div>`;
+}
+function aAppr(){
+  ensurePend();const d=st.pend;if(!d)return loadingBox();
+  return `${d.registrations.length?`<div class="card"><h3>📱 ${t('regReq')} (${d.registrations.length})</h3>${d.registrations.map(e=>`<div class="emp"><div class="av">${esc(initials(e.name))}</div><div style="flex:1"><div class="nm">${esc(e.name)}</div><div class="meta">${esc(e.id)} · 📞 ${esc(e.phone)}</div><div class="meta">${t('devCode')}: <b style="font-size:20px;color:var(--ink);letter-spacing:2px">${esc(e.devCode)}</b> · ${esc(e.regAt)}</div>
+   <div class="row" style="margin-top:8px"><button class="sbtn g" onclick="approveDev('${esc(e.id)}',true)">✓ ${t('approveDev')}</button><button class="sbtn r" onclick="approveDev('${esc(e.id)}',false)">✗ ${t('reject')}</button></div></div></div>`).join('')}</div>`:''}
+  <div class="card"><h3>📝 ${t('leaveReq')} (${d.leaves.length})</h3>${d.leaves.length?d.leaves.map(l=>`<div class="emp"><div class="av">${esc(initials(l.name))}</div><div style="flex:1"><div class="nm">${esc(l.name)}</div><div class="meta">${esc(l.empId)} · <b>${t(l.type)}</b> · ${l.days} ${t('days')}</div><div class="meta">📅 ${sd(l.from)}${l.to!==l.from?' – '+sd(l.to):''}</div>${l.reason?`<div class="meta">💬 ${esc(l.reason)}</div>`:''}
+   <div class="row" style="margin-top:8px"><button class="sbtn g" onclick="decideLeave('${esc(l.id)}',true)">✓ ${t('approve')}</button><button class="sbtn r" onclick="decideLeave('${esc(l.id)}',false)">✗ ${t('reject')}</button></div></div></div>`).join(''):`<div class="muted">${t('none')}</div>`}</div>
+  <div class="card"><h3>💰 ${t('advReq')} (${d.advances.length})</h3>${d.advances.length?d.advances.map(a=>`<div class="emp"><div class="av">${esc(initials(a.name))}</div><div style="flex:1"><div class="row" style="align-items:center"><div class="nm">${esc(a.name)}</div><div style="text-align:right;font-weight:800;font-size:20px;flex:0 0 auto">${money(a.amount)}฿</div></div><div class="meta">${esc(a.empId)} · ${esc(a.nickname)} · ${sd(a.created)}</div>${a.status==='notReceived'?`<div class="pill p-r" style="margin-top:4px">⚠️ ${t('empNotGot')}</div>`:''}
+   <div class="acts"><button class="sbtn b" onclick="markPaid('${esc(a.id)}')">💸 ${t('markPaid')}</button></div></div></div>`).join(''):`<div class="muted">${t('none')}</div>`}</div>
+  <div class="card"><h3>🗂 ${t('history')}</h3><div class="list">${d.history.map(h=>{const x=h.item;return h.kind==='leave'?`<div><div><b>${esc(x.name)}</b><div class="small muted">${t(x.type)} · ${x.days} ${t('days')}</div></div>${statusPill(x.status)}</div>`:`<div><div><b>${esc(x.name)}</b><div class="small muted">💰 ${money(x.amount)} ${t('baht')}</div></div>${advPill(x.status)}</div>`}).join('')||`<div class="muted">${t('none')}</div>`}</div></div>`;
+}
+function aStaff(){
+  ensureEmps();if(!st.emps)return loadingBox();
+  const q=st.q.trim().toLowerCase(),qd=digits(q);
+  const list=st.emps.filter(e=>!q||String(e.name).toLowerCase().indexOf(q)>=0||String(e.id).indexOf(q)>=0||(qd&&digits(e.phone).indexOf(qd)>=0));
+  return `<div class="pad" style="margin-top:12px"><button class="btn g" style="margin-top:0" onclick="empForm()">${t('addEmp')}</button>
+  <input class="in" id="q" style="margin-top:12px;font-size:18px" placeholder="🔍 ${t('search')}" value="${esc(st.q)}" oninput="st.q=this.value;clearTimeout(window._qt);window._qt=setTimeout(()=>{render();const i=document.getElementById('q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},300)"></div>
+  <div class="card">${list.map(e=>`<div class="emp" style="${e.active?'':'opacity:.55'}"><div class="av">${esc(initials(e.name))}</div><div style="flex:1;min-width:0"><div class="nm">${esc(e.name)} ${e.isAdmin?'🛡️':''}</div>
+   <div class="meta">${esc(e.id)} · ${esc(e.position)}</div><div class="meta">📞 ${e.phone?esc(e.phone):`<span style="color:var(--red)">${t('noPhone')}</span>`}</div>
+   <div style="margin-top:4px">${e.active?`<span class="pill p-g">${t('active')}</span>`:`<span class="pill p-n">${t('resigned')}</span>`} ${e.devStatus==='approved'?`<span class="pill p-b">📱 ${t('bound')} · ${esc(e.devCode)}</span>`:e.devStatus==='pending'?`<span class="pill p-a">📱 ${t('devPending')} · ${esc(e.devCode)}</span>`:`<span class="pill p-n">${t('unbound')}</span>`}</div>
+   <div class="acts"><button class="sbtn o" onclick="empForm('${esc(e.id)}')">✏️ ${t('edit')}</button>${e.devStatus?`<button class="sbtn o" onclick="resetDev('${esc(e.id)}')">🔄 ${t('resetDev')}</button>`:''}<button class="sbtn ${e.active?'o':'g'}" onclick="toggleResign('${esc(e.id)}')">${e.active?'🚪 '+t('resign'):'↩️ '+t('rehire')}</button></div></div></div>`).join('')}</div>
+  <div class="small muted center pad">${t('sheetNote')}</div>`;
+}
+function aRep(){
+  const m=st.repMonth;ensureRep(m);const d=st.rep[m];
+  if(!d)return monthNav('repMonth')+loadingBox();
+  const list=d.employees.filter(e=>e.active||d.logs.some(l=>l.empId===e.id));
+  return monthNav('repMonth')+`<div class="pad"><button class="btn b" onclick="exportAll()">${t('exportAll')}</button></div>
+  <div class="card scroll"><table class="tbl"><thead><tr><th>${t('empName')}</th><th>${t('work')}</th><th>${t('late')}</th><th>${t('leaveDays')}</th><th>${t('hr')}</th><th>฿</th></tr></thead><tbody>
+  ${list.map(e=>{const s=stats(d.logs,d.leaves,d.advances,e.id,m);return `<tr><td><b>${esc(e.id)}</b> ${esc(e.name)}</td><td>${s.work}</td><td style="color:${s.late?'var(--red)':''}">${s.late}</td><td>${s.leave}</td><td>${s.hours.toFixed(0)}</td><td>${money(s.adv)}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+function aSet(){
+  const s=st.settings;
+  return `<div class="card"><label class="f">${t('workStart')}</label><input class="in" type="time" id="s1" value="${esc(s.start)}">
+  <label class="f">${t('workEnd')}</label><input class="in" type="time" id="s2" value="${esc(s.end)}">
+  <label class="f">${t('grace')}</label><input class="in" type="number" id="s3" min="0" value="${esc(s.grace)}">
+  <label class="f">${t('emails')}</label><input class="in" type="email" id="s4" style="font-size:17px" value="${esc(s.emails||'')}" placeholder="hr@gmail.com">
+  <button class="btn g" onclick="saveSettings()">${t('save')}</button></div>
+  <div class="small muted center pad">${t('sheetNote')}</div>`;
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  document.body.classList.toggle('my',st.lang==='my');document.documentElement.lang=st.lang;
+  let h;
+  if(st.view==='loading')h=vLoading();
+  else if(st.view==='fatal')h=vFatal();
+  else if(st.view==='login')h=vLogin();
+  else if(st.view==='pending')h=vPending();
+  else{const e=st.me;if(st.tab==='admin'&&!e.isAdmin)st.tab='time';
+    h=header()+({time:vTime,leave:vLeave,adv:vAdv,sum:vSum,admin:vAdmin}[st.tab])(e)+navBar();}
+  // keep typed values in forms across re-render
+  const keep={};['ph','an','aa','lr','lf','lt'].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.value});
+  document.getElementById('app').innerHTML=h;
+  Object.keys(keep).forEach(id=>{const el=document.getElementById(id);if(el&&keep[id]!=='')el.value=keep[id]});
+}
+setInterval(()=>{const c=document.getElementById('clk');if(c){const n=new Date();c.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds())}},1000);
+// real-time: admin live view refreshes every 20s; pending screen re-checks every 20s
+setInterval(()=>{
+  if(document.hidden||modalOpen())return;
+  if(st.view==='home'&&st.tab==='admin'&&st.atab==='live')ensureLive(true);
+  else if(st.view==='pending')api('me').then(j=>{applyMe(j);render()}).catch(()=>{});
+},20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&st.view==='home'&&!modalOpen()){api('me').then(j=>{applyMe(j);render()}).catch(()=>{})}});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+boot();
+</script>
+</body>
+</html>
