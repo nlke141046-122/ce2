@@ -65,7 +65,7 @@ textarea.in{font-size:18px;min-height:80px}
 .bigbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;width:230px;height:230px;margin:22px auto 8px;border-radius:50%;border:0;color:#fff;font-size:36px;font-weight:800;box-shadow:0 10px 0 rgba(0,0,0,.18),0 18px 30px rgba(0,0,0,.12);transition:transform .08s}
 .bigbtn:active{transform:translateY(6px);box-shadow:0 4px 0 rgba(0,0,0,.18)}
 .bigbtn .ic{font-size:58px;line-height:1;margin-bottom:6px}
-.bigbtn.in{background:var(--green)}.bigbtn.out{background:var(--red)}
+.bigbtn.in{background:var(--green)}.bigbtn.out{background:var(--red)}.bigbtn.ot{background:#d9730d}.btn.ot{background:#d9730d}.btn.otin{background:#1d6fd8}.p-o{background:#fdeedd;color:#b85e08}
 .hint{text-align:center;color:var(--muted);font-size:16px;padding:0 24px}
 .status2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .st{border-radius:14px;padding:12px;background:var(--bg)}
@@ -216,7 +216,11 @@ errAlready:'ယနေ့ မှတ်ပြီးသား',errGeneric:'အမ�
 installT:'📲 ဖုန်းမျက်နှာပြင်တွင် အက်ပ်ထည့်ပါ (စာရင်းမသွင်းမီ တစ်ကြိမ်)',installIos:'iPhone: Safari ဖြင့်ဖွင့် → Share ⬆️ နှိပ် → "Add to Home Screen" → CE2 အိုင်ကွန်မှ ဖွင့်ပါ',installAnd:'Android: ⋮ မီနူး → "Install app" / "Add to Home screen" → CE2 အိုင်ကွန်မှ ဖွင့်ပါ',installBtn:'အက်ပ် ထည့်ရန်',
 noConfig:'config.js တွင် API_URL မရှိသေးပါ',notSetup:'စနစ် မပြင်ဆင်ရသေးပါ (HR က setup လုပ်ရမည်)',emails:'Admin အီးမေးလ်',
 serverTime:'ဆာဗာ အချိန်',reload:'ပြန်ဖွင့်',sheetNote:'ဒေတာအားလုံးကို ကုမ္ပဏီ Google Sheet တွင်လည်း ကြည့်/ပြင်နိုင်သည်'}};
-['th','en','my'].forEach(l=>Object.assign(T[l],T2[l]));
+const T3={
+th:{otTitle:'ทำงานล่วงเวลา (OT)',otIn:'เข้า OT',otOut:'ออก OT',otHours:'ชั่วโมง OT',savedOtIn:'บันทึกเข้า OT แล้ว',savedOtOut:'บันทึกออก OT แล้ว',confirmOtOut:'ยืนยันออก OT ตอนนี้?',otWorking:'กำลังทำ OT',otToday:'OT วันนี้',otHint:'ถ้าทำงานล่วงเวลา กด "เข้า OT" ตอนเริ่ม และกด "ออก OT" ตอนเลิก',otStarted:'เริ่ม OT เวลา',outFirst:'กรุณากด "ออกงาน" ก่อน แล้วจึงกด "เข้า OT"'},
+en:{otTitle:'Overtime (OT)',otIn:'OT In',otOut:'OT Out',otHours:'OT hours',savedOtIn:'OT start saved',savedOtOut:'OT end saved',confirmOtOut:'End OT now?',otWorking:'On OT',otToday:'OT today',otHint:'If you work overtime, tap "OT In" when you start and "OT Out" when you finish',otStarted:'OT started at',outFirst:'Please tap "Clock Out" first, then "OT In"'},
+my:{otTitle:'အချိန်ပို (OT)',otIn:'OT ဝင်',otOut:'OT ဆင်း',otHours:'OT နာရီ',savedOtIn:'OT ဝင်ချိန် မှတ်ပြီး',savedOtOut:'OT ဆင်းချိန် မှတ်ပြီး',confirmOtOut:'ယခု OT ဆင်းမလား?',otWorking:'OT လုပ်နေ',otToday:'ယနေ့ OT',otHint:'အချိန်ပို လုပ်ပါက စချိန်တွင် "OT ဝင်"၊ ပြီးချိန်တွင် "OT ဆင်း" နှိပ်ပါ',otStarted:'OT စချိန်',outFirst:'"အလုပ်ဆင်း" ကို အရင်နှိပ်ပြီးမှ "OT ဝင်" နှိပ်ပါ'}};
+['th','en','my'].forEach(l=>Object.assign(T[l],T2[l],T3[l]));
 const LOCALE={th:'th-TH-u-ca-buddhist',en:'en-GB',my:'my-MM'};
 
 /* ===================== HELPERS ===================== */
@@ -236,16 +240,17 @@ function monthLabel(m){const [y,mo]=m.split('-').map(Number);try{return new Date
 function shiftMonth(m,d){let [y,mo]=m.split('-').map(Number);mo+=d;if(mo<1){mo=12;y--}if(mo>12){mo=1;y++}return y+'-'+pad(mo)}
 function sd(s,opt){return s?fmtDate(parseYmd(s),opt||{day:'numeric',month:'short'}):''}
 function daysInMonth(l,m){let n=0;for(let d=parseYmd(l.from),i=0;ymd(d)<=l.to&&i<400;d=addDays(d,1),i++){if(d.getDay()!==0&&ymd(d).slice(0,7)===m)n++}return n}
-function stats(logs,leaves,advances,empId,m){
+function stats(logs,leaves,advances,empId,m,ot){
+  const otRows=(ot||[]).filter(o=>o.empId===empId&&o.date.slice(0,7)===m);const otHours=otRows.reduce((s,o)=>s+Number(o.hours||0),0);
   logs=(logs||[]).filter(l=>l.empId===empId&&l.date.slice(0,7)===m).sort((a,b)=>a.date<b.date?-1:1);
   const lv={sick:0,personal:0,vacation:0,other:0};
   (leaves||[]).filter(l=>l.empId===empId&&l.status==='approved').forEach(l=>lv[l.type]=(lv[l.type]||0)+daysInMonth(l,m));
   const adv=(advances||[]).filter(a=>a.empId===empId&&String(a.created).slice(0,7)===m).reduce((s,a)=>s+Number(a.amount||0),0);
-  return{logs,work:logs.length,late:logs.filter(l=>l.late).length,hours:logs.reduce((s,l)=>s+Number(l.hours||0),0),lv,leave:lv.sick+lv.personal+lv.vacation+lv.other,adv};
+  return{otRows,otHours,logs,work:logs.length,late:logs.filter(l=>l.late).length,hours:logs.reduce((s,l)=>s+Number(l.hours||0),0),lv,leave:lv.sick+lv.personal+lv.vacation+lv.other,adv};
 }
 
 /* ===================== STATE ===================== */
-const st={lang:lsGet(KL)||'th',view:'loading',tab:'time',atab:'live',me:null,settings:{start:'08:30',end:'17:30',grace:5,emails:''},today:null,pendingCount:0,
+const st={lang:lsGet(KL)||'th',view:'loading',tab:'time',atab:'live',me:null,settings:{start:'08:30',end:'17:30',grace:5,emails:''},today:null,ot:null,pendingCount:0,
   my:{},live:null,pend:null,emps:null,rep:{},phone:'',leaveType:'',sumMonth:curMonth(),repMonth:curMonth(),q:'',busy:false,loading:{},fatal:''};
 
 /* ===================== API ===================== */
@@ -258,7 +263,7 @@ async function api(action,data){
   return j;
 }
 function applyMe(j){
-  st.me=j.me;if(j.settings)st.settings=j.settings;st.today=j.today||null;st.pendingCount=j.pendingCount||0;
+  st.me=j.me;if(j.settings)st.settings=j.settings;st.today=j.today||null;st.ot=j.ot||null;st.pendingCount=j.pendingCount||0;
   st.view=j.me.devStatus==='approved'?'home':'pending';
 }
 function handleErr(e){
@@ -275,6 +280,7 @@ function handleErr(e){
     case 'NOT_REGISTERED':st.view='login';st.me=null;render();return err(t('errKicked'),'');
     case 'DEVICE_PENDING':st.view='pending';return render();
     case 'ALREADY_IN':case 'ALREADY_OUT':refreshMe();return err(t('errAlready'),'');
+    case 'OUT_FIRST':return err(t('outFirst'),'');
     case 'DUPLICATE':return err(t('errDup'),'');
     case 'REQUIRED':return err(t('errReq'),'');
     case 'BAD_DATE':return err(t('errDate'),'');
@@ -356,9 +362,10 @@ function punch(kind){
     try{
       const j=await api('clock',Object.assign({kind:kind},loc||{}));
       st.busy=false;applyMe(j);delete st.my[curMonth()];st.live=null;
-      const l=j.today||{},time=kind==='in'?l.in:l.out,loc2=kind==='in'?l.inLoc:l.outLoc,map=kind==='in'?l.inMap:l.outMap;
-      modal({icon:'✅',kind:'ok',title:kind==='in'?t('savedIn'):t('savedOut'),
-        body:`<div style="font-size:52px;font-weight:800">${esc(time)}</div>${kind==='in'?`<span class="pill ${l.late?'p-r':'p-g'}">${l.late?t('late'):t('onTime')}</span>`:''}<p class="small muted">📍 ${map?esc(loc2):t('noLoc')}${map?`<br><a class="map" href="${esc(map)}" target="_blank" rel="noopener">${t('map')}</a>`:''}</p>`,
+      const isOt=kind.indexOf('ot')===0,isIn=kind==='in'||kind==='otIn';
+      const l=(isOt?j.ot:j.today)||{},time=isIn?l.in:l.out,loc2=isIn?l.inLoc:l.outLoc,map=isIn?l.inMap:l.outMap;
+      modal({icon:isOt?'🌙':'✅',kind:'ok',title:{in:t('savedIn'),out:t('savedOut'),otIn:t('savedOtIn'),otOut:t('savedOtOut')}[kind],
+        body:`<div style="font-size:52px;font-weight:800">${esc(time)}</div>${kind==='otOut'?`<span class="pill p-o">${t('otHours')}: ${Number(l.hours||0).toFixed(1)} ${t('hr')}</span>`:''}${kind==='in'?`<span class="pill ${l.late?'p-r':'p-g'}">${l.late?t('late'):t('onTime')}</span>`:''}<p class="small muted">📍 ${map?esc(loc2):t('noLoc')}${map?`<br><a class="map" href="${esc(map)}" target="_blank" rel="noopener">${t('map')}</a>`:''}</p>`,
         buttons:[{label:t('ok'),cls:'g',fn:()=>{closeModal();render()}}]});
     }catch(e){st.busy=false;handleErr(e)}
   };
@@ -368,7 +375,7 @@ function punch(kind){
     if(loc)return send(loc);
     modal({icon:'📍',kind:'err',title:t('errLocT'),body:`<p>${t('errLoc')}</p>`,stack:true,buttons:[{label:'🔄 '+t('retry'),cls:'g',fn:withLoc},{label:t('noLocSave'),cls:'ghost',fn:()=>send(null)},{label:t('cancel'),cls:'ghost',fn:closeModal}]});
   };
-  if(kind==='out')confirmBox(t('confirmOut'),withLoc,'r');else withLoc();
+  if(kind==='out')confirmBox(t('confirmOut'),withLoc,'r');else if(kind==='otOut')confirmBox(t('confirmOtOut'),withLoc,'ot');else withLoc();
 }
 function pickType(tp){st.leaveType=tp;const f=document.getElementById('lf'),to=document.getElementById('lt'),r=document.getElementById('lr');const keep={f:f&&f.value,t:to&&to.value,r:r&&r.value};render();
   if(keep.f){document.getElementById('lf').value=keep.f;document.getElementById('lt').value=keep.t;document.getElementById('lr').value=keep.r}}
@@ -421,6 +428,8 @@ const LST_TH={pending:'รออนุมัติ',approved:'อนุญาต
 const AST_TH={requested:'รอโอน',transferred:'โอนแล้ว',received:'ได้รับแล้ว',notReceived:'ยังไม่ได้รับ'};
 const LOGH=['วันที่','รหัส','ชื่อ','เวลาเข้า','สถานะ','พิกัดเข้า','แผนที่เข้า','เวลาออก','พิกัดออก','แผนที่ออก','ชั่วโมง'];
 const LOGW=[12,7,26,9,9,20,42,9,20,42,8];
+const OTH=['วันที่','รหัส','ชื่อ','เข้า OT','ออก OT','ชั่วโมง OT','พิกัดเข้า','แผนที่เข้า','พิกัดออก','แผนที่ออก'];const OTW=[12,7,26,9,9,10,20,42,20,42];
+function otRow(o){return[o.date,o.empId,o.name,o.in,o.out||'',Number(o.hours||0),o.inLoc,o.inMap,o.outLoc||'',o.outMap||'']}
 function logRow(l){return[l.date,l.empId,l.name,l.in,l.late?'สาย':'ตรงเวลา',l.inLoc,l.inMap,l.out||'',l.outLoc||'',l.outMap||'',Number(l.hours||0)]}
 function sheet(rows,w){const ws=XLSX.utils.aoa_to_sheet(rows);if(w)ws['!cols']=w.map(x=>({wch:x}));return ws}
 function saveBook(wb,filename){
@@ -433,19 +442,22 @@ function saveBook(wb,filename){
   }catch(e){err(t('dlNo'),'')}
 }
 function exportMine(){
-  const m=st.sumMonth,d=st.my[m];if(!d)return;const e=st.me,s=stats(d.logs,d.leaves,d.advances,e.id,m);
+  const m=st.sumMonth,d=st.my[m];if(!d)return;const e=st.me,s=stats(d.logs,d.leaves,d.advances,e.id,m,d.ot);
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,sheet([['สรุปประจำเดือน',m],['รหัส',e.id],['ชื่อ',e.name],['ตำแหน่ง',e.position],[],['วันทำงาน',s.work],['วันมาสาย',s.late],['ลาป่วย',s.lv.sick],['ลากิจ',s.lv.personal],['ลาพักร้อน',s.lv.vacation],['ลาอื่นๆ',s.lv.other],['รวมวันลา',s.leave],['ชั่วโมงรวม',+s.hours.toFixed(2)],['ยอดเบิกเงิน (บาท)',s.adv]],[20,30]),'สรุป');
+  XLSX.utils.book_append_sheet(wb,sheet([['สรุปประจำเดือน',m],['รหัส',e.id],['ชื่อ',e.name],['ตำแหน่ง',e.position],[],['วันทำงาน',s.work],['วันมาสาย',s.late],['ลาป่วย',s.lv.sick],['ลากิจ',s.lv.personal],['ลาพักร้อน',s.lv.vacation],['ลาอื่นๆ',s.lv.other],['รวมวันลา',s.leave],['ชั่วโมงรวม',+s.hours.toFixed(2)],['ชั่วโมง OT',+s.otHours.toFixed(2)],['ยอดเบิกเงิน (บาท)',s.adv]],[20,30]),'สรุป');
+  XLSX.utils.book_append_sheet(wb,sheet([OTH].concat(s.otRows.map(otRow)),OTW),'OT');
   XLSX.utils.book_append_sheet(wb,sheet([LOGH].concat(s.logs.map(logRow)),LOGW),'บันทึกเวลา');
   saveBook(wb,'CE2_'+e.id+'_'+m+'.xlsx');
 }
 function exportAll(){
   const m=st.repMonth,d=st.rep[m];if(!d)return;const wb=XLSX.utils.book_new();
-  const sum=[['รหัส','ชื่อ','ตำแหน่ง','สถานะ','วันทำงาน','มาสาย(วัน)','ลาป่วย','ลากิจ','ลาพักร้อน','ลาอื่นๆ','รวมวันลา','ชั่วโมงรวม','ยอดเบิก(บาท)']];
-  d.employees.forEach(e=>{const s=stats(d.logs,d.leaves,d.advances,e.id,m);sum.push([e.id,e.name,e.position,e.active?'ทำงานอยู่':'ลาออก',s.work,s.late,s.lv.sick,s.lv.personal,s.lv.vacation,s.lv.other,s.leave,+s.hours.toFixed(2),s.adv])});
-  XLSX.utils.book_append_sheet(wb,sheet(sum,[7,26,22,10,9,10,7,7,9,8,9,10,12]),'สรุปรายเดือน');
+  const sum=[['รหัส','ชื่อ','ตำแหน่ง','สถานะ','วันทำงาน','มาสาย(วัน)','ลาป่วย','ลากิจ','ลาพักร้อน','ลาอื่นๆ','รวมวันลา','ชั่วโมงรวม','ชั่วโมง OT','ยอดเบิก(บาท)']];
+  d.employees.forEach(e=>{const s=stats(d.logs,d.leaves,d.advances,e.id,m,d.ot);sum.push([e.id,e.name,e.position,e.active?'ทำงานอยู่':'ลาออก',s.work,s.late,s.lv.sick,s.lv.personal,s.lv.vacation,s.lv.other,s.leave,+s.hours.toFixed(2),+s.otHours.toFixed(2),s.adv])});
+  XLSX.utils.book_append_sheet(wb,sheet(sum,[7,26,22,10,9,10,7,7,9,8,9,10,10,12]),'สรุปรายเดือน');
   const logs=d.logs.slice().sort((a,b)=>a.date===b.date?String(a.empId).localeCompare(b.empId):(a.date<b.date?-1:1));
   XLSX.utils.book_append_sheet(wb,sheet([LOGH].concat(logs.map(logRow)),LOGW),'บันทึกเวลา');
+  const ots=(d.ot||[]).slice().sort((a,b)=>a.date===b.date?String(a.empId).localeCompare(b.empId):(a.date<b.date?-1:1));
+  XLSX.utils.book_append_sheet(wb,sheet([OTH].concat(ots.map(otRow)),OTW),'OT');
   XLSX.utils.book_append_sheet(wb,sheet([['รหัส','ชื่อ','ประเภท','ตั้งแต่','ถึง','จำนวนวัน','เหตุผล','สถานะ','ผู้อนุมัติ','วันที่ส่ง']].concat(d.leaves.map(l=>[l.empId,l.name,TYPE_TH[l.type],l.from,l.to,l.days,l.reason,LST_TH[l.status],l.by||'',l.created])),[7,26,10,12,12,9,28,11,26,16]),'การลา');
   XLSX.utils.book_append_sheet(wb,sheet([['รหัส','ชื่อ','ชื่อเล่น','จำนวนเงิน','สถานะ','วันที่ขอ','วันที่โอน','ผู้โอน','วันที่ยืนยัน']].concat(d.advances.map(a=>[a.empId,a.name,a.nickname,a.amount,AST_TH[a.status],a.created,a.paidAt||'',a.paidBy||'',a.confirmedAt||''])),[7,26,12,12,14,16,16,24,16]),'การเบิกเงิน');
   XLSX.utils.book_append_sheet(wb,sheet([['รหัส','ชื่อ','เบอร์โทร','ตำแหน่ง','สถานะ','ผู้ดูแลระบบ','มือถือ']].concat(d.employees.map(e=>[e.id,e.name,e.phone||'รอเบอร์',e.position,e.active?'ทำงานอยู่':'ลาออก',e.isAdmin?'ใช่':'',e.devStatus==='approved'?'อนุมัติแล้ว':e.devStatus==='pending'?'รออนุมัติ':'ยังไม่ลงทะเบียน'])),[7,26,14,22,10,10,16]),'รายชื่อพนักงาน');
@@ -490,14 +502,17 @@ function mapLink(url){return url?`<a class="map" href="${esc(url)}" target="_bla
 function vTime(e){
   const log=st.today,now=new Date(),m=curMonth();ensureMy(m);const my=st.my[m];
   const today=ymd(now);const lv=my&&(my.leaves||[]).find(l=>l.status==='approved'&&today>=l.from&&today<=l.to);
+  const ot=st.ot,otOpen=ot&&!ot.out,isSun=now.getDay()===0;
   let btn;
-  if(!log)btn=`<button class="bigbtn in" onclick="punch('in')"><span class="ic">☀️</span>${t('clockIn')}</button>`;
+  if(otOpen)btn=`<button class="bigbtn ot" onclick="punch('otOut')"><span class="ic">🌙</span>${t('otOut')}</button><div class="hint">${t('otStarted')} ${esc(ot.in)}</div>`;
+  else if(!log)btn=`<button class="bigbtn in" onclick="punch('in')"><span class="ic">☀️</span>${t('clockIn')}</button>`;
   else if(!log.out)btn=`<button class="bigbtn out" onclick="punch('out')"><span class="ic">🏠</span>${t('clockOut')}</button>`;
   else btn=`<div class="card center" style="background:var(--green2);border-color:transparent"><div style="font-size:48px">🎉</div><h2 style="color:var(--green)">${t('doneToday')}</h2></div>`;
   const recent=my?(my.logs||[]).slice().sort((a,b)=>a.date<b.date?1:-1).slice(0,6):null;
   return userBar(e)+`<div class="clock" id="clk">${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}</div><div class="date">${fmtDate(now)}</div>
   ${lv?`<div class="card center" style="background:var(--blue2);border-color:transparent">🌴 ${t('onLeaveToday')} (${t(lv.type)})</div>`:''}
-  ${btn}${(!log||!log.out)?`<div class="hint">${t('tapHint')}</div>`:''}
+  ${btn}${(!otOpen&&(!log||!log.out))?`<div class="hint">${t('tapHint')}</div>`:''}
+  ${(!otOpen&&((log&&log.out)||isSun||(ot&&ot.out)))?`<div class="card"><h3>🌙 ${t('otTitle')}</h3>${ot&&ot.out?`<div style="margin-bottom:6px">${t('otToday')}: <b>${esc(ot.in)} – ${esc(ot.out)}</b> · ${Number(ot.hours||0).toFixed(1)} ${t('hr')}</div>`:''}<button class="btn otin" style="margin-top:6px" onclick="punch('otIn')">🌙 ${t('otIn')}</button><div class="small muted" style="margin-top:8px">${t('otHint')}</div></div>`:''}
   <div class="card"><div class="status2">
    <div class="st"><div class="k">☀️ ${t('inAt')}</div><div class="v">${log?esc(log.in):'<span class="muted">'+t('notYet')+'</span>'}</div>${log?latePill(log):''}</div>
    <div class="st"><div class="k">🏠 ${t('outAt')}</div><div class="v">${log&&log.out?esc(log.out):'<span class="muted">'+t('notYet')+'</span>'}</div></div>
@@ -530,16 +545,18 @@ function monthNav(key){return `<div class="monthnav"><button onclick="st.${key}=
 function vSum(e){
   const m=st.sumMonth;ensureMy(m);const d=st.my[m];
   if(!d)return `<div class="hello"><h1>📊 ${t('sumTitle')}</h1></div>${monthNav('sumMonth')}${loadingBox()}`;
-  const s=stats(d.logs,d.leaves,d.advances,e.id,m);
+  const s=stats(d.logs,d.leaves,d.advances,e.id,m,d.ot);
   return `<div class="hello"><h1>📊 ${t('sumTitle')}</h1></div>${monthNav('sumMonth')}
   <div class="pad" style="margin-top:12px"><div class="tiles">
    <div class="tile"><div class="k">✅ ${t('work')}</div><div class="v">${s.work} <span class="u">${t('days')}</span></div></div>
    <div class="tile"><div class="k">⏰ ${t('lateDays')}</div><div class="v" style="color:${s.late?'var(--red)':'inherit'}">${s.late} <span class="u">${t('days')}</span></div></div>
    <div class="tile"><div class="k">🌴 ${t('leaveDays')}</div><div class="v">${s.leave} <span class="u">${t('days')}</span></div><div class="small muted">${t('sick')} ${s.lv.sick} · ${t('personal')} ${s.lv.personal} · ${t('vacation')} ${s.lv.vacation} · ${t('other')} ${s.lv.other}</div></div>
    <div class="tile"><div class="k">🕒 ${t('hours')}</div><div class="v">${s.hours.toFixed(1)} <span class="u">${t('hr')}</span></div></div>
-   <div class="tile" style="grid-column:1/-1"><div class="k">💰 ${t('advTotal')}</div><div class="v">${money(s.adv)} <span class="u">${t('baht')}</span></div></div>
+   <div class="tile"><div class="k">🌙 ${t('otHours')}</div><div class="v" style="color:#b85e08">${s.otHours.toFixed(1)} <span class="u">${t('hr')}</span></div></div>
+   <div class="tile"><div class="k">💰 ${t('advTotal')}</div><div class="v">${money(s.adv)} <span class="u">${t('baht')}</span></div></div>
   </div><button class="btn b" onclick="exportMine()">${t('export')}</button></div>
-  <div class="card"><h3>${t('daily')}</h3><div class="list">${s.logs.length?s.logs.slice().reverse().map(l=>`<div><div><b>${sd(l.date,{weekday:'short',day:'numeric'})}</b><div class="small muted">${esc(l.in)} – ${l.out?esc(l.out):'…'} · ${Number(l.hours||0).toFixed(1)} ${t('hr')}</div></div>${latePill(l)}</div>`).join(''):`<div class="muted">${t('none')}</div>`}</div></div>`;
+  ${s.otRows.filter(o=>!s.logs.some(l=>l.date===o.date)).length?`<div class="card"><h3>🌙 ${t('otTitle')}</h3><div class="list">${s.otRows.filter(o=>!s.logs.some(l=>l.date===o.date)).map(o=>`<div><div><b>${sd(o.date,{weekday:'short',day:'numeric'})}</b><div class="small muted">${esc(o.in)} – ${o.out?esc(o.out):'…'} · ${Number(o.hours||0).toFixed(1)} ${t('hr')}</div></div><span class="pill p-o">OT</span></div>`).join('')}</div></div>`:''}
+  <div class="card"><h3>${t('daily')}</h3><div class="list">${s.logs.length?s.logs.slice().reverse().map(l=>`<div><div><b>${sd(l.date,{weekday:'short',day:'numeric'})}</b><div class="small muted">${esc(l.in)} – ${l.out?esc(l.out):'…'} · ${Number(l.hours||0).toFixed(1)} ${t('hr')}${s.otRows.filter(o=>o.date===l.date).map(o=>` · 🌙 OT ${esc(o.in)}–${o.out?esc(o.out):'…'}`).join('')}</div></div>${latePill(l)}</div>`).join(''):`<div class="muted">${t('none')}</div>`}</div></div>`;
 }
 /* ---------- admin ---------- */
 function vAdmin(){
@@ -552,10 +569,10 @@ function vAdmin(){
 function aTab(k){st.atab=k;if(k==='live')st.live=null;if(k==='appr')st.pend=null;if(k==='staff')st.emps=null;if(k==='rep')delete st.rep[st.repMonth];render()}
 function aLive(){
   ensureLive();const d=st.live;if(!d)return loadingBox();
-  const rows=d.employees.map(e=>{const l=d.logs.find(x=>x.empId===e.id),lv=d.leaves.find(x=>x.empId===e.id);
-    let s,p;if(l&&l.out){s='left';p='p-n'}else if(l){s='working';p='p-g'}else if(lv){s='onLeave';p='p-b'}else{s='absent';p='p-a'}return{e,l,s,p}});
+  const rows=d.employees.map(e=>{const l=d.logs.find(x=>x.empId===e.id),lv=d.leaves.find(x=>x.empId===e.id),o=(d.ot||[]).filter(x=>x.empId===e.id).pop();
+    let s,p;if(o&&!o.out){s='otWorking';p='p-o'}else if(l&&l.out){s='left';p='p-n'}else if(l){s='working';p='p-g'}else if(lv){s='onLeave';p='p-b'}else{s='absent';p='p-a'}return{e,l,s,p,o}});
   const c=k=>rows.filter(r=>r.s===k).length,lateN=rows.filter(r=>r.l&&r.l.late).length;
-  const order={working:0,left:1,onLeave:2,absent:3};rows.sort((a,b)=>order[a.s]-order[b.s]||String(a.e.id).localeCompare(b.e.id));
+  const order={otWorking:0,working:1,left:2,onLeave:3,absent:4};rows.sort((a,b)=>order[a.s]-order[b.s]||String(a.e.id).localeCompare(b.e.id));
   return `<div class="ts">● ${t('updated')} ${esc(String(d.serverTime||'').slice(11))} <button class="refresh" onclick="ensureLive(true)">↻</button></div>
   <div class="pad" style="margin-top:8px"><div class="tiles" style="grid-template-columns:repeat(3,1fr)">
    <div class="tile"><div class="k">${t('working')}</div><div class="v" style="color:var(--green)">${c('working')}</div></div>
@@ -563,11 +580,11 @@ function aLive(){
    <div class="tile"><div class="k">${t('absent')}</div><div class="v" style="color:var(--amber)">${c('absent')}</div></div>
    <div class="tile"><div class="k">${t('onLeave')}</div><div class="v" style="color:var(--blue)">${c('onLeave')}</div></div>
    <div class="tile"><div class="k">${t('late')}</div><div class="v" style="color:var(--red)">${lateN}</div></div>
-   <div class="tile"><div class="k">${t('all')}</div><div class="v">${rows.length}</div></div>
+   <div class="tile"><div class="k">🌙 ${t('otWorking')}</div><div class="v" style="color:#b85e08">${c('otWorking')}</div></div>
   </div></div>
-  <div class="card">${rows.map(({e,l,s,p})=>`<div class="emp"><div class="av">${esc(initials(e.name))}</div><div style="flex:1;min-width:0"><div class="row" style="align-items:center"><div class="nm">${esc(e.name)}</div><div style="text-align:right;flex:0 0 auto"><span class="pill ${p}">${t(s)}</span></div></div>
+  <div class="card">${rows.map(({e,l,s,p,o})=>`<div class="emp"><div class="av">${esc(initials(e.name))}</div><div style="flex:1;min-width:0"><div class="row" style="align-items:center"><div class="nm">${esc(e.name)}</div><div style="text-align:right;flex:0 0 auto"><span class="pill ${p}">${t(s)}</span></div></div>
    <div class="meta">${esc(e.id)} · ${esc(e.position)}</div>
-   ${l?`<div class="meta">☀️ ${esc(l.in)} ${l.late?`<span class="pill p-r" style="font-size:12px">${t('late')}</span>`:''} · 🏠 ${l.out?esc(l.out):'—'} · ${mapLink(l.outMap||l.inMap)}</div>`:''}</div></div>`).join('')}</div>`;
+   ${l?`<div class="meta">☀️ ${esc(l.in)} ${l.late?`<span class="pill p-r" style="font-size:12px">${t('late')}</span>`:''} · 🏠 ${l.out?esc(l.out):'—'} · ${mapLink(l.outMap||l.inMap)}</div>`:''}${o?`<div class="meta">🌙 OT ${esc(o.in)} – ${o.out?esc(o.out):'…'} · ${mapLink(o.outMap||o.inMap)}</div>`:''}</div></div>`).join('')}</div>`;
 }
 function aAppr(){
   ensurePend();const d=st.pend;if(!d)return loadingBox();
@@ -596,8 +613,8 @@ function aRep(){
   if(!d)return monthNav('repMonth')+loadingBox();
   const list=d.employees.filter(e=>e.active||d.logs.some(l=>l.empId===e.id));
   return monthNav('repMonth')+`<div class="pad"><button class="btn b" onclick="exportAll()">${t('exportAll')}</button></div>
-  <div class="card scroll"><table class="tbl"><thead><tr><th>${t('empName')}</th><th>${t('work')}</th><th>${t('late')}</th><th>${t('leaveDays')}</th><th>${t('hr')}</th><th>฿</th></tr></thead><tbody>
-  ${list.map(e=>{const s=stats(d.logs,d.leaves,d.advances,e.id,m);return `<tr><td><b>${esc(e.id)}</b> ${esc(e.name)}</td><td>${s.work}</td><td style="color:${s.late?'var(--red)':''}">${s.late}</td><td>${s.leave}</td><td>${s.hours.toFixed(0)}</td><td>${money(s.adv)}</td></tr>`}).join('')}</tbody></table></div>`;
+  <div class="card scroll"><table class="tbl"><thead><tr><th>${t('empName')}</th><th>${t('work')}</th><th>${t('late')}</th><th>${t('leaveDays')}</th><th>${t('hr')}</th><th>OT</th><th>฿</th></tr></thead><tbody>
+  ${list.map(e=>{const s=stats(d.logs,d.leaves,d.advances,e.id,m,d.ot);return `<tr><td><b>${esc(e.id)}</b> ${esc(e.name)}</td><td>${s.work}</td><td style="color:${s.late?'var(--red)':''}">${s.late}</td><td>${s.leave}</td><td>${s.hours.toFixed(0)}</td><td>${s.otHours.toFixed(1)}</td><td>${money(s.adv)}</td></tr>`}).join('')}</tbody></table></div>`;
 }
 function aSet(){
   const s=st.settings;
